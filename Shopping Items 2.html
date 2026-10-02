@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Online Shopping Explorer & Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 15px;
+      background-color: #f0f4f8;
+      color: #1a202c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #2b6cb0;
+      margin: 0 0 8px 0;
+    }
+
+    /* Mode Switcher Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      border: 3px solid #3182ce;
+      border-radius: 12px;
+      background-color: white;
+      color: #3182ce;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: #3182ce;
+      color: white;
+    }
+
+    /* General Containers */
+    .view-container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    /* DISCOVERY VIEW */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .item-card {
+      background: white;
+      border: 4px solid #cbd5e0;
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .icon-wrapper {
+      width: 90px;
+      height: 90px;
+      margin-bottom: 10px;
+    }
+
+    .icon-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .item-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .item-desc {
+      font-size: 14px;
+      color: #4a5568;
+      margin-bottom: 12px;
+    }
+
+    .discover-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background-color: #ebf8ff;
+      color: #2b6cb0;
+      border: 2px solid #3182ce;
+      border-radius: 10px;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    /* QUIZ VIEW */
+    .quiz-card {
+      background: white;
+      border: 4px solid #3182ce;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 20px;
+      background-color: #edf2f7;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 2px solid #cbd5e0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4299e1, #3182ce);
+      transition: width 0.3s;
+    }
+
+    .question-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: #2d3748;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 3px solid #cbd5e0;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3748;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.1s;
+    }
+
+    .option-btn:active {
+      transform: scale(0.96);
+      background-color: #ebf8ff;
+      border-color: #3182ce;
+    }
+
+    .option-btn .icon-wrapper {
+      width: 70px;
+      height: 70px;
+    }
+
+    /* SUMMARY VIEW */
+    .summary-card {
+      background: white;
+      border: 4px dashed #3182ce;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .score-badge {
+      font-size: 48px;
+      font-weight: 900;
+      color: #2b6cb0;
+      margin: 10px 0;
+    }
+
+    .summary-list {
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 16px;
+    }
+
+    .action-btn {
+      padding: 14px 28px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 6px;
+    }
+
+    .btn-speak { background-color: #3182ce; }
+    .btn-reset { background-color: #48bb78; }
+    .btn-print { background-color: #805ad5; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🛍️ Online Shopping Explorer</h1>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabDiscover" onclick="switchView('discover')">🔍 Discover Items</button>
+    <button class="tab-btn" id="tabQuiz" onclick="switchView('quiz')">📝 Take Quiz</button>
+  </div>
+
+  <!-- VIEW 1: DISCOVER ITEMS -->
+  <div class="view-container" id="discoverView">
+    <div class="grid-container" id="discoverGrid"></div>
+  </div>
+
+  <!-- VIEW 2: QUIZ -->
+  <div class="view-container" id="quizView" style="display: none;">
+    <div class="quiz-card">
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="quizProgress"></div>
+      </div>
+      <div class="question-title" id="questionText">Question goes here...</div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <button class="action-btn btn-speak" onclick="speakCurrentQuestion()">🔊 Listen to Question</button>
+    </div>
+  </div>
+
+  <!-- VIEW 3: SUMMARY -->
+  <div class="view-container" id="summaryView" style="display: none;">
+    <div class="summary-card">
+      <div style="font-size: 50px;">🎉 Certificate of Completion 🎉</div>
+      <h2>Quiz Summary Results</h2>
+      <div class="score-badge" id="finalScore">0 / 5</div>
+      <p id="scoreFeedback" style="font-size: 18px; font-weight: bold; color: #4a5568;"></p>
+      
+      <div class="summary-list" id="summaryList"></div>
+
+      <div>
+        <button class="action-btn btn-speak" onclick="speakSummary()">🔊 Read Summary</button>
+        <button class="action-btn btn-print" onclick="window.print()">📸 Print / Save</button>
+        <button class="action-btn btn-reset" onclick="resetQuiz()">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Item Data Definitions
+    const ITEMS = [
+      {
+        id: 'watch',
+        name: 'Seiko 5 Watch',
+        desc: 'A stylish automatic wristwatch used for telling time.',
+        link: 'https://www.google.com/search?q=Seiko+5+watch',
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#319795" stroke-width="2"><circle cx="12" cy="12" r="6"/><path d="M12 9v3l2 2M9 2h6M9 22h6"/></svg>`
+      },
+      {
+        id: 'iphone',
+        name: 'iPhone',
+        desc: 'A smart touchscreen phone for calling, internet, and apps.',
+        link: 'https://www.google.com/search?q=iPhone',
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg>`
+      },
+      {
+        id: 'cleaner',
+        name: 'Toilet Cleaner Detergent',
+        desc: 'A household liquid product used to sanitize the toilet bowl.',
+        link: 'https://www.google.com/search?q=Toilet+cleaner+detergent',
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2"><rect x="7" y="8" width="10" height="13" rx="2"/><path d="M10 8V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3M9 4h6"/></svg>`
+      },
+      {
+        id: 'bluray',
+        name: 'Aquaman Blu-ray',
+        desc: 'A high-definition movie disc to play in a Blu-ray player.',
+        link: 'https://www.google.com/search?q=Aquaman+bluray',
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#805ad5" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>`
+      },
+      {
+        id: 'tent',
+        name: 'Waterproof Tent',
+        desc: 'A portable outdoor shelter kept dry from rain while camping.',
+        link: 'https://www.google.com/search?q=Waterproof+tent',
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2"><path d="M12 3L2 20h20L12 3zM12 3v17"/></svg>`
+      }
+    ];
+
+    // Quiz Question Bank
+    const QUESTIONS = [
+      {
+        prompt: "Which item helps you check what time it is on your wrist?",
+        correctId: 'watch'
+      },
+      {
+        prompt: "Which item is used to call friends and browse the web?",
+        correctId: 'iphone'
+      },
+      {
+        prompt: "Which item is kept in the bathroom for cleaning and sanitizing?",
+        correctId: 'cleaner'
+      },
+      {
+        prompt: "Which item lets you watch a movie on your disc player?",
+        correctId: 'bluray'
+      },
+      {
+        prompt: "Which item keeps you dry when sleeping outdoors in the rain?",
+        correctId: 'tent'
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let quizAnswers = [];
+
+    // Text-to-Speech Helper
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // Switch Tab Views
+    function switchView(viewName) {
+      document.getElementById('discoverView').style.display = viewName === 'discover' ? 'block' : 'none';
+      document.getElementById('quizView').style.display = viewName === 'quiz' ? 'block' : 'none';
+      document.getElementById('summaryView').style.display = viewName === 'summary' ? 'block' : 'none';
+
+      document.getElementById('tabDiscover').classList.toggle('active', viewName === 'discover');
+      document.getElementById('tabQuiz').classList.toggle('active', viewName === 'quiz');
+
+      if (viewName === 'quiz' && currentQuestionIndex === 0) {
+        loadQuestion();
+      }
+    }
+
+    // Render Discovery Items Grid
+    function renderDiscoveryGrid() {
+      const grid = document.getElementById('discoverGrid');
+      grid.innerHTML = '';
+
+      ITEMS.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+          <div class="icon-wrapper">${item.svg}</div>
+          <div class="item-title">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+          <a class="discover-btn" href="${item.link}" target="_blank" rel="noopener">🔍 Learn & Search ↗</a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Load Quiz Question
+    function loadQuestion() {
+      const q = QUESTIONS[currentQuestionIndex];
+      document.getElementById('questionText').innerText = `Question ${currentQuestionIndex + 1}: ${q.prompt}`;
+      
+      // Update Progress Bar
+      const progressPct = ((currentQuestionIndex) / QUESTIONS.length) * 100;
+      document.getElementById('quizProgress').style.width = `${progressPct}%`;
+
+      const optionsGrid = document.getElementById('optionsGrid');
+      optionsGrid.innerHTML = '';
+
+      // Shuffle options (always including correct + 3 random choices)
+      const shuffledItems = [...ITEMS].sort(() => 0.5 - Math.random()).slice(0, 4);
+      if (!shuffledItems.some(i => i.id === q.correctId)) {
+        shuffledItems[0] = ITEMS.find(i => i.id === q.correctId);
+      }
+      shuffledItems.sort(() => 0.5 - Math.random());
+
+      shuffledItems.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `
+          <div class="icon-wrapper">${item.svg}</div>
+          <div>${item.name}</div>
+        `;
+        btn.onclick = () => selectAnswer(item.id);
+        optionsGrid.appendChild(btn);
+      });
+
+      speakCurrentQuestion();
+    }
+
+    function speakCurrentQuestion() {
+      const q = QUESTIONS[currentQuestionIndex];
+      speakText(`Question ${currentQuestionIndex + 1}: ${q.prompt}`);
+    }
+
+    function selectAnswer(selectedId) {
+      const q = QUESTIONS[currentQuestionIndex];
+      const isCorrect = selectedId === q.correctId;
+      
+      quizAnswers.push({
+        question: q.prompt,
+        correctItem: ITEMS.find(i => i.id === q.correctId).name,
+        selectedItem: ITEMS.find(i => i.id === selectedId).name,
+        isCorrect: isCorrect
+      });
+
+      if (isCorrect) {
+        speakText("Correct!");
+      } else {
+        speakText("Good try!");
+      }
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < QUESTIONS.length) {
+        setTimeout(loadQuestion, 800);
+      } else {
+        setTimeout(showSummary, 800);
+      }
+    }
+
+    // Render Final Summary Page
+    function showSummary() {
+      switchView('summary');
+
+      const correctCount = quizAnswers.filter(a => a.isCorrect).length;
+      document.getElementById('finalScore').innerText = `${correctCount} / ${QUESTIONS.length}`;
+
+      const feedbackEl = document.getElementById('scoreFeedback');
+      if (correctCount === 5) {
+        feedbackEl.innerText = "🌟 Perfect Score! You are an expert shopper!";
+      } else if (correctCount >= 3) {
+        feedbackEl.innerText = "👍 Great Job! You know your shopping items well!";
+      } else {
+        feedbackEl.innerText = "💪 Good Effort! Try again to practice your shopping skills!";
+      }
+
+      const listEl = document.getElementById('summaryList');
+      listEl.innerHTML = '';
+
+      quizAnswers.forEach((ans, idx) => {
+        const div = document.createElement('div');
+        div.className = 'summary-item';
+        div.innerHTML = `
+          <div>
+            <strong>Q${idx + 1}: ${ans.correctItem}</strong><br/>
+            <span style="font-size: 14px; color: #718096;">Selected: ${ans.selectedItem}</span>
+          </div>
+          <div style="font-size: 24px;">${ans.isCorrect ? '✅' : '❌'}</div>
+        `;
+        listEl.appendChild(div);
+      });
+
+      speakSummary();
+    }
+
+    function speakSummary() {
+      const correctCount = quizAnswers.filter(a => a.isCorrect).length;
+      speakText(`Quiz finished! You scored ${correctCount} out of 5.`);
+    }
+
+    function resetQuiz() {
+      currentQuestionIndex = 0;
+      quizAnswers = [];
+      switchView('quiz');
+    }
+
+    // Initial Start
+    renderDiscoveryGrid();
+  </script>
+</body>
+</html>

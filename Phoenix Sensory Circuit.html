@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phoenix Sensory Circuit</title>
+<style>
+  :root{
+    --bg1:#08233f;
+    --bg2:#0f5870;
+    --panel:rgba(255,255,255,.12);
+    --panel2:rgba(255,255,255,.18);
+    --text:#ffffff;
+    --accent:#ffd34e;
+    --good:#55e39a;
+    --danger:#ff7171;
+    --shadow:0 14px 40px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+
+  html,body{
+    width:100%;
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    font-family:Arial, Helvetica, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,211,78,.13), transparent 28%),
+      radial-gradient(circle at 80% 10%, rgba(88,213,255,.14), transparent 30%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+  }
+
+  body{
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+  }
+
+  .app{
+    width:100vw;
+    height:100vh;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    gap:12px;
+    padding:14px;
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:20px;
+    padding:12px 18px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(12px);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    min-width:0;
+  }
+
+  .logo{
+    width:54px;
+    height:54px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-size:30px;
+    background:linear-gradient(145deg,#ffbf2f,#ff6e42);
+    box-shadow:0 8px 20px rgba(255,120,60,.35);
+    flex:0 0 auto;
+  }
+
+  h1{
+    margin:0;
+    font-size:clamp(1.35rem,2.5vw,2.35rem);
+    line-height:1;
+    letter-spacing:.4px;
+  }
+
+  .subtitle{
+    margin-top:5px;
+    font-size:clamp(.8rem,1.2vw,1rem);
+    opacity:.85;
+  }
+
+  .speech-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap;
+    font-weight:700;
+    background:rgba(0,0,0,.18);
+    border-radius:999px;
+    padding:9px 13px;
+  }
+
+  .switch{
+    width:52px;
+    height:28px;
+    position:relative;
+    display:inline-block;
+  }
+
+  .switch input{display:none}
+
+  .slider{
+    position:absolute;
+    inset:0;
+    border-radius:99px;
+    background:rgba(255,255,255,.25);
+    cursor:pointer;
+    transition:.25s;
+  }
+
+  .slider::before{
+    content:"";
+    position:absolute;
+    width:22px;
+    height:22px;
+    left:3px;
+    top:3px;
+    border-radius:50%;
+    background:white;
+    transition:.25s;
+  }
+
+  .switch input:checked + .slider{
+    background:var(--good);
+  }
+
+  .switch input:checked + .slider::before{
+    transform:translateX(24px);
+  }
+
+  main{
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(240px, 30%) 1fr;
+    gap:12px;
+  }
+
+  .exercise-list{
+    min-height:0;
+    overflow:auto;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+    padding-right:3px;
+  }
+
+  .exercise-card{
+    display:grid;
+    grid-template-columns:48px 1fr auto;
+    align-items:center;
+    gap:10px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:16px;
+    padding:9px 10px;
+    transition:.2s;
+    backdrop-filter:blur(10px);
+  }
+
+  .exercise-card.active{
+    background:rgba(255,211,78,.2);
+    border-color:rgba(255,211,78,.85);
+    transform:translateX(3px);
+  }
+
+  .exercise-card.done{
+    background:rgba(85,227,154,.18);
+    border-color:rgba(85,227,154,.65);
+  }
+
+  .number{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    font-size:1.05rem;
+    font-weight:900;
+    background:rgba(255,255,255,.14);
+  }
+
+  .exercise-card.done .number{
+    background:var(--good);
+    color:#083525;
+  }
+
+  .exercise-name{
+    font-size:clamp(.92rem,1.4vw,1.15rem);
+    font-weight:800;
+    text-transform:capitalize;
+  }
+
+  .exercise-hint{
+    font-size:.78rem;
+    opacity:.74;
+    margin-top:2px;
+  }
+
+  button{
+    border:0;
+    font:inherit;
+    cursor:pointer;
+  }
+
+  .start-btn{
+    border-radius:12px;
+    padding:9px 12px;
+    font-weight:900;
+    color:#102d39;
+    background:var(--accent);
+    box-shadow:0 5px 14px rgba(0,0,0,.2);
+  }
+
+  .start-btn:hover{filter:brightness(1.06)}
+  .start-btn:active{transform:translateY(1px)}
+
+  .stage{
+    min-width:0;
+    min-height:0;
+    position:relative;
+    border-radius:24px;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,255,255,.18), transparent 46%),
+      linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:var(--shadow);
+  }
+
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .stage-info{
+    position:absolute;
+    left:20px;
+    top:16px;
+    z-index:3;
+    pointer-events:none;
+  }
+
+  .current-label{
+    font-size:clamp(1.3rem,2.6vw,2.4rem);
+    font-weight:900;
+    text-shadow:0 3px 12px rgba(0,0,0,.35);
+    text-transform:capitalize;
+  }
+
+  .instruction{
+    max-width:600px;
+    margin-top:5px;
+    font-size:clamp(.82rem,1.3vw,1.05rem);
+    opacity:.9;
+  }
+
+  .timer-wrap{
+    position:absolute;
+    right:18px;
+    top:16px;
+    z-index:4;
+    width:94px;
+    height:94px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:rgba(4,24,40,.72);
+    border:5px solid rgba(255,255,255,.22);
+    box-shadow:0 10px 25px rgba(0,0,0,.3);
+  }
+
+  .timer{
+    font-size:2.25rem;
+    line-height:1;
+    font-weight:1000;
+    color:var(--accent);
+  }
+
+  .timer-label{
+    position:absolute;
+    bottom:10px;
+    font-size:.63rem;
+    letter-spacing:1px;
+    opacity:.72;
+  }
+
+  .progress{
+    position:absolute;
+    left:20px;
+    right:20px;
+    bottom:18px;
+    height:15px;
+    border-radius:999px;
+    overflow:hidden;
+    background:rgba(0,0,0,.26);
+    border:1px solid rgba(255,255,255,.2);
+    z-index:4;
+  }
+
+  .progress-bar{
+    width:0%;
+    height:100%;
+    border-radius:inherit;
+    background:linear-gradient(90deg,#ffd34e,#ff8d53);
+    transition:width .1s linear;
+  }
+
+  footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:18px;
+    padding:10px 14px;
+    box-shadow:var(--shadow);
+  }
+
+  .status{
+    font-weight:800;
+    font-size:clamp(.8rem,1.3vw,1rem);
+  }
+
+  .finish-btn{
+    padding:10px 16px;
+    border-radius:13px;
+    background:var(--good);
+    color:#063425;
+    font-weight:900;
+  }
+
+  .overlay{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    background:rgba(3,18,30,.72);
+    backdrop-filter:blur(7px);
+  }
+
+  .overlay.show{display:flex}
+
+  .well-done{
+    font-size:clamp(3rem,9vw,8rem);
+    line-height:.95;
+    margin:0;
+    font-weight:1000;
+    color:#fff;
+    text-shadow:
+      0 5px 0 rgba(0,0,0,.15),
+      0 0 35px rgba(255,211,78,.65);
+  }
+
+  .celebration-text{
+    margin-top:18px;
+    font-size:clamp(1.1rem,2.2vw,2rem);
+    font-weight:800;
+  }
+
+  .again-btn{
+    margin-top:28px;
+    padding:14px 24px;
+    border-radius:16px;
+    background:var(--accent);
+    color:#16303d;
+    font-size:1.05rem;
+    font-weight:900;
+  }
+
+  #confettiCanvas{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:25;
+  }
+
+  @media (max-width:850px){
+    .app{padding:8px;gap:8px}
+    main{
+      grid-template-columns:1fr;
+      grid-template-rows:1fr auto;
+    }
+    .stage{order:1}
+    .exercise-list{
+      order:2;
+      grid-template-columns:repeat(3,1fr);
+      max-height:180px;
+    }
+    .exercise-card{
+      grid-template-columns:36px 1fr;
+    }
+    .number{width:34px;height:34px;border-radius:11px}
+    .start-btn{
+      grid-column:1 / -1;
+      width:100%;
+      padding:7px;
+    }
+    .exercise-hint{display:none}
+    header{padding:9px 12px}
+    .logo{width:45px;height:45px;font-size:24px}
+    .speech-toggle span:first-child{display:none}
+    .timer-wrap{width:76px;height:76px}
+    .timer{font-size:1.8rem}
+  }
+
+  @media (max-width:560px){
+    .exercise-list{grid-template-columns:repeat(2,1fr)}
+    .subtitle{display:none}
+    footer{padding:7px 10px}
+    .finish-btn{padding:8px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🔥</div>
+      <div>
+        <h1>Phoenix Sensory Circuit</h1>
+        <div class="subtitle">Move your body, follow the figure, and complete each 10-second exercise.</div>
+      </div>
+    </div>
+
+    <div class="speech-toggle">
+      <span>Text to speech</span>
+      <label class="switch" aria-label="Toggle text to speech">
+        <input type="checkbox" id="speechToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <section class="exercise-list" id="exerciseList" aria-label="Exercises"></section>
+
+    <section class="stage">
+      <div class="stage-info">
+        <div class="current-label" id="currentLabel">Choose an exercise</div>
+        <div class="instruction" id="instruction">Press a Start button. Copy the animated movement safely.</div>
+      </div>
+
+      <div class="timer-wrap" aria-live="polite">
+        <div class="timer" id="timer">10</div>
+        <div class="timer-label">SECONDS</div>
+      </div>
+
+      <canvas id="exerciseCanvas"></canvas>
+
+      <div class="progress" aria-label="Exercise progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="status" id="status">Ready to begin.</div>
+    <button class="finish-btn" id="finishBtn">Finish Circuit</button>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <h2 class="well-done">Well Done!</h2>
+  <div class="celebration-text">You completed the Phoenix Sensory Circuit.</div>
+  <button class="again-btn" id="againBtn">Start Again</button>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+(() => {
+  const exercises = [
+    {
+      name: "High knees",
+      hint: "Lift one knee, then the other",
+      instruction: "Stand tall and lift your knees one at a time towards your waist."
+    },
+    {
+      name: "Squats",
+      hint: "Bend knees and stand up",
+      instruction: "Keep your chest up, bend your knees, sit back, then stand tall."
+    },
+    {
+      name: "Waist circles",
+      hint: "Circle your hips slowly",
+      instruction: "Keep your feet steady and make slow, controlled circles with your waist."
+    },
+    {
+      name: "Arm circles",
+      hint: "Make big circles",
+      instruction: "Stretch both arms out and make large, steady circles."
+    },
+    {
+      name: "Neck circles",
+      hint: "Move gently and slowly",
+      instruction: "Move your head gently in a small, slow circle. Do not force the movement."
+    },
+    {
+      name: "Stretch",
+      hint: "Reach up, then bend down",
+      instruction: "Reach both hands high above your head, then slowly bend down towards your toes."
+    }
+  ];
+
+  const list = document.getElementById("exerciseList");
+  const canvas = document.getElementById("exerciseCanvas");
+  const ctx = canvas.getContext("2d");
+  const timerEl = document.getElementById("timer");
+  const progressBar = document.getElementById("progressBar");
+  const currentLabel = document.getElementById("currentLabel");
+  const instruction = document.getElementById("instruction");
+  const status = document.getElementById("status");
+  const speechToggle = document.getElementById("speechToggle");
+  const overlay = document.getElementById("overlay");
+  const finishBtn = document.getElementById("finishBtn");
+  const againBtn = document.getElementById("againBtn");
+
+  let activeIndex = -1;
+  let completed = new Set();
+  let running = false;
+  let startTime = 0;
+  let elapsedBeforePause = 0;
+  let animationFrame = null;
+  const duration = 10000;
+
+  const cards = [];
+
+  exercises.forEach((ex, index) => {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    card.innerHTML = `
+      <div class="number">${index + 1}</div>
+      <div>
+        <div class="exercise-name">${ex.name}</div>
+        <div class="exercise-hint">${ex.hint}</div>
+      </div>
+      <button class="start-btn" data-index="${index}">Start</button>
+    `;
+    list.appendChild(card);
+    cards.push(card);
+  });
+
+  list.addEventListener("click", e => {
+    const btn = e.target.closest(".start-btn");
+    if (!btn) return;
+    startExercise(Number(btn.dataset.index));
+  });
+
+  function speak(text) {
+    if (!speechToggle.checked || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.05;
+    speechSynthesis.speak(utterance);
+  }
+
+  function startExercise(index) {
+    if (running && activeIndex === index) return;
+
+    activeIndex = index;
+    running = true;
+    startTime = performance.now();
+    elapsedBeforePause = 0;
+
+    cards.forEach((card, i) => {
+      card.classList.toggle("active", i === index);
+      const btn = card.querySelector(".start-btn");
+      btn.textContent = i === index ? "Running…" : (completed.has(i) ? "Again" : "Start");
+    });
+
+    currentLabel.textContent = exercises[index].name;
+    instruction.textContent = exercises[index].instruction;
+    status.textContent = `${exercises[index].name} is running.`;
+    timerEl.textContent = "10";
+    progressBar.style.width = "0%";
+
+    speak(`${exercises[index].name}. ${exercises[index].instruction}. Start now.`);
+    cancelAnimationFrame(animationFrame);
+    animationFrame = requestAnimationFrame(loop);
+  }
+
+  function completeExercise() {
+    running = false;
+    completed.add(activeIndex);
+    cards[activeIndex].classList.remove("active");
+    cards[activeIndex].classList.add("done");
+    cards[activeIndex].querySelector(".start-btn").textContent = "Again";
+    timerEl.textContent = "0";
+    progressBar.style.width = "100%";
+    status.textContent = `${exercises[activeIndex].name} complete.`;
+    speak(`${exercises[activeIndex].name} complete. Well done.`);
+
+    if (completed.size === exercises.length) {
+      setTimeout(showCelebration, 500);
+    }
+  }
+
+  function loop(now) {
+    resizeCanvas();
+
+    let progress = 0;
+    if (running) {
+      const elapsed = now - startTime;
+      progress = Math.min(elapsed / duration, 1);
+      const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+      timerEl.textContent = remaining;
+      progressBar.style.width = `${progress * 100}%`;
+
+      if (progress >= 1) {
+        completeExercise();
+      }
+    }
+
+    drawScene(now / 1000, activeIndex);
+    animationFrame = requestAnimationFrame(loop);
+  }
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.round(rect.width * dpr);
+    const h = Math.round(rect.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  function drawScene(t, exerciseIndex) {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    // Soft floor and room details
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, "rgba(126,220,255,.10)");
+    grad.addColorStop(1, "rgba(5,30,48,.25)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    const floorY = h * 0.83;
+    ctx.fillStyle = "rgba(255,255,255,.08)";
+    ctx.beginPath();
+    ctx.ellipse(w / 2, floorY + 10, Math.min(180, w * .22), 30, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Movement guide halo
+    ctx.strokeStyle = "rgba(255,211,78,.16)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(w / 2, h * .49, Math.min(w,h) * .31, 0, Math.PI * 2);
+    ctx.stroke();
+
+    drawPerson(w / 2, floorY, Math.min(w, h) / 440, t, exerciseIndex);
+  }
+
+  function drawPerson(cx, groundY, scale, t, ex) {
+    const cycle = t * 2.3;
+    let headX = 0, headY = -245;
+    let neckX = 0, neckY = -212;
+    let shoulderY = -195;
+    let hipX = 0, hipY = -105;
+    let leftShoulder = [-34, shoulderY], rightShoulder = [34, shoulderY];
+    let leftElbow = [-60, -145], rightElbow = [60, -145];
+    let leftHand = [-70, -90], rightHand = [70, -90];
+    let leftKnee = [-30, -55], rightKnee = [30, -55];
+    let leftFoot = [-38, 0], rightFoot = [38, 0];
+    let torsoTilt = 0;
+    let headTilt = 0;
+
+    if (ex === 0) { // high knees
+      const a = (Math.sin(cycle * Math.PI) + 1) / 2;
+      const b = 1 - a;
+      leftKnee = [-22, -55 - 82 * a];
+      leftFoot = [-18, -15 - 72 * a];
+      rightKnee = [22, -55 - 82 * b];
+      rightFoot = [18, -15 - 72 * b];
+      leftElbow = [-48, -155 - 20 * b];
+      leftHand = [-30, -110 - 45 * b];
+      rightElbow = [48, -155 - 20 * a];
+      rightHand = [30, -110 - 45 * a];
+      headY += Math.sin(cycle * Math.PI * 2) * 3;
+    } else if (ex === 1) { // squats
+      const squat = (1 - Math.cos(cycle * Math.PI)) / 2;
+      hipY = -105 + 75 * squat;
+      shoulderY = -195 + 50 * squat;
+      headY = -245 + 50 * squat;
+      neckY = -212 + 50 * squat;
+      leftShoulder = [-34, shoulderY];
+      rightShoulder = [34, shoulderY];
+      leftElbow = [-75, -150 + 40 * squat];
+      rightElbow = [75, -150 + 40 * squat];
+      leftHand = [-100, -145 + 35 * squat];
+      rightHand = [100, -145 + 35 * squat];
+      leftKnee = [-58, -48];
+      rightKnee = [58, -48];
+      leftFoot = [-62, 0];
+      rightFoot = [62, 0];
+      torsoTilt = 0.08 * squat;
+    } else if (ex === 2) { // waist circles
+      const r = 24;
+      hipX = Math.cos(cycle * Math.PI) * r;
+      hipY = -105 + Math.sin(cycle * Math.PI) * 12;
+      headX = hipX * .2;
+      neckX = headX;
+      leftHand = [-44 + hipX, -102];
+      rightHand = [44 + hipX, -102];
+      leftElbow = [-60 + hipX, -128];
+      rightElbow = [60 + hipX, -128];
+      torsoTilt = Math.sin(cycle * Math.PI) * .12;
+    } else if (ex === 3) { // arm circles
+      const ang = cycle * Math.PI;
+      const radius = 75;
+      leftElbow = [-34 - Math.cos(ang) * 45, shoulderY + Math.sin(ang) * 45];
+      leftHand = [-34 - Math.cos(ang) * radius, shoulderY + Math.sin(ang) * radius];
+      rightElbow = [34 + Math.cos(ang) * 45, shoulderY - Math.sin(ang) * 45];
+      rightHand = [34 + Math.cos(ang) * radius, shoulderY - Math.sin(ang) * radius];
+    } else if (ex === 4) { // neck circles
+      headX = Math.cos(cycle * Math.PI * .7) * 13;
+      headY = -245 + Math.sin(cycle * Math.PI * .7) * 9;
+      headTilt = Math.sin(cycle * Math.PI * .7) * .18;
+      leftHand = [-45, -92];
+      rightHand = [45, -92];
+    } else if (ex === 5) { // stretch
+      const phase = (Math.sin(cycle * Math.PI * .65) + 1) / 2;
+      const bend = Math.max(0, (phase - .42) / .58);
+      const reach = 1 - bend;
+      shoulderY = -195 + bend * 70;
+      hipY = -105;
+      headY = -245 + bend * 125;
+      neckY = -212 + bend * 105;
+      torsoTilt = bend * 1.05;
+      leftShoulder = [-34, shoulderY];
+      rightShoulder = [34, shoulderY];
+      leftElbow = [-28 - bend * 20, -255 + bend * 170];
+      rightElbow = [28 + bend * 20, -255 + bend * 170];
+      leftHand = [-22 - bend * 40, -320 + bend * 260];
+      rightHand = [22 + bend * 40, -320 + bend * 260];
+      headX = bend * 45;
+      neckX = bend * 30;
+    }
+
+    ctx.save();
+    ctx.translate(cx, groundY);
+    ctx.scale(scale, scale);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,.22)";
+    ctx.beginPath();
+    ctx.ellipse(0, 5, 72, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs behind shorts
+    drawLimb([hipX - 20, hipY], leftKnee, leftFoot, 20, "#e3a67d", "#f2bd97");
+    drawLimb([hipX + 20, hipY], rightKnee, rightFoot, 20, "#e3a67d", "#f2bd97");
+
+    // Shoes
+    drawShoe(leftFoot[0], leftFoot[1], -1);
+    drawShoe(rightFoot[0], rightFoot[1], 1);
+
+    // Torso
+    ctx.save();
+    ctx.translate(hipX, hipY);
+    ctx.rotate(torsoTilt);
+    const torsoGrad = ctx.createLinearGradient(0, -110, 0, 0);
+    torsoGrad.addColorStop(0, "#ffdd55");
+    torsoGrad.addColorStop(1, "#f08d32");
+    ctx.fillStyle = torsoGrad;
+    ctx.strokeStyle = "rgba(70,35,20,.38)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-39, -92);
+    ctx.quadraticCurveTo(-50, -55, -34, 0);
+    ctx.lineTo(34, 0);
+    ctx.quadraticCurveTo(50, -55, 39, -92);
+    ctx.quadraticCurveTo(0, -112, -39, -92);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Shirt highlight
+    ctx.strokeStyle = "rgba(255,255,255,.28)";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-23, -82);
+    ctx.quadraticCurveTo(-32, -48, -22, -15);
+    ctx.stroke();
+    ctx.restore();
+
+    // Shorts
+    ctx.fillStyle = "#274f88";
+    ctx.strokeStyle = "rgba(6,20,40,.55)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(hipX - 37, hipY - 8);
+    ctx.lineTo(hipX + 37, hipY - 8);
+    ctx.lineTo(hipX + 31, hipY + 34);
+    ctx.lineTo(hipX + 5, hipY + 29);
+    ctx.lineTo(hipX, hipY + 12);
+    ctx.lineTo(hipX - 5, hipY + 29);
+    ctx.lineTo(hipX - 31, hipY + 34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Arms
+    drawLimb(leftShoulder, leftElbow, leftHand, 17, "#e3a67d", "#f2bd97");
+    drawLimb(rightShoulder, rightElbow, rightHand, 17, "#e3a67d", "#f2bd97");
+
+    // Neck
+    ctx.strokeStyle = "#e3a67d";
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(neckX, neckY + 8);
+    ctx.lineTo(headX, headY + 22);
+    ctx.stroke();
+
+    // Head
+    ctx.save();
+    ctx.translate(headX, headY);
+    ctx.rotate(headTilt);
+    const skinGrad = ctx.createRadialGradient(-10, -12, 5, 0, 0, 38);
+    skinGrad.addColorStop(0, "#ffd5b7");
+    skinGrad.addColorStop(1, "#d9956f");
+    ctx.fillStyle = skinGrad;
+    ctx.strokeStyle = "rgba(70,35,20,.4)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 34, 39, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Hair
+    ctx.fillStyle = "#34271f";
+    ctx.beginPath();
+    ctx.arc(0, -9, 35, Math.PI, Math.PI * 2);
+    ctx.quadraticCurveTo(26, -33, 11, -38);
+    ctx.quadraticCurveTo(-10, -44, -28, -25);
+    ctx.closePath();
+    ctx.fill();
+
+    // Face
+    ctx.fillStyle = "#2e261f";
+    ctx.beginPath();
+    ctx.arc(-11, 1, 2.5, 0, Math.PI * 2);
+    ctx.arc(11, 1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#8b493a";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, 10, 11, .2, Math.PI - .2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+
+    function drawLimb(start, joint, end, width, dark, light) {
+      ctx.strokeStyle = dark;
+      ctx.lineWidth = width + 5;
+      ctx.beginPath();
+      ctx.moveTo(start[0], start[1]);
+      ctx.lineTo(joint[0], joint[1]);
+      ctx.lineTo(end[0], end[1]);
+      ctx.stroke();
+
+      ctx.strokeStyle = light;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(start[0], start[1]);
+      ctx.lineTo(joint[0], joint[1]);
+      ctx.lineTo(end[0], end[1]);
+      ctx.stroke();
+
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.arc(joint[0], joint[1], width * .52, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(end[0], end[1], width * .55, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawShoe(x, y, dir) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = "#eef5ff";
+      ctx.strokeStyle = "#253346";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(dir < 0 ? -29 : -8, -8, 38, 17, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  finishBtn.addEventListener("click", showCelebration);
+  againBtn.addEventListener("click", resetCircuit);
+
+  function showCelebration() {
+    running = false;
+    overlay.classList.add("show");
+    speak("Well done! You completed the Phoenix Sensory Circuit.");
+    launchConfetti();
+  }
+
+  function resetCircuit() {
+    overlay.classList.remove("show");
+    completed.clear();
+    activeIndex = -1;
+    cards.forEach((card, i) => {
+      card.classList.remove("active", "done");
+      card.querySelector(".start-btn").textContent = "Start";
+    });
+    currentLabel.textContent = "Choose an exercise";
+    instruction.textContent = "Press a Start button. Copy the animated movement safely.";
+    timerEl.textContent = "10";
+    progressBar.style.width = "0%";
+    status.textContent = "Ready to begin.";
+  }
+
+  // Confetti
+  const confettiCanvas = document.getElementById("confettiCanvas");
+  const cctx = confettiCanvas.getContext("2d");
+  let confetti = [];
+  let confettiRAF = null;
+
+  function launchConfetti() {
+    resizeConfetti();
+    confetti = Array.from({length: 220}, () => ({
+      x: Math.random() * innerWidth,
+      y: -20 - Math.random() * innerHeight * .5,
+      vx: -2 + Math.random() * 4,
+      vy: 2 + Math.random() * 5,
+      size: 5 + Math.random() * 9,
+      rotation: Math.random() * Math.PI,
+      spin: -.18 + Math.random() * .36,
+      hue: Math.random() * 360,
+      life: 240 + Math.random() * 160
+    }));
+    cancelAnimationFrame(confettiRAF);
+    animateConfetti();
+  }
+
+  function resizeConfetti() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    confettiCanvas.width = innerWidth * dpr;
+    confettiCanvas.height = innerHeight * dpr;
+    confettiCanvas.style.width = innerWidth + "px";
+    confettiCanvas.style.height = innerHeight + "px";
+    cctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function animateConfetti() {
+    cctx.clearRect(0,0,innerWidth,innerHeight);
+    confetti.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += .025;
+      p.rotation += p.spin;
+      p.life--;
+
+      cctx.save();
+      cctx.translate(p.x,p.y);
+      cctx.rotate(p.rotation);
+      cctx.fillStyle = `hsl(${p.hue} 90% 60%)`;
+      cctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.6);
+      cctx.restore();
+    });
+    confetti = confetti.filter(p => p.life > 0 && p.y < innerHeight + 30);
+    if (confetti.length) confettiRAF = requestAnimationFrame(animateConfetti);
+    else cctx.clearRect(0,0,innerWidth,innerHeight);
+  }
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    resizeConfetti();
+  });
+
+  resizeCanvas();
+  animationFrame = requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Big Symbol Item Sorter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      background-color: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Screen Management */
+    .screen {
+      width: 100%;
+      max-width: 800px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* --- Start Screen --- */
+    .start-card {
+      background: white;
+      border: 4px solid #3182ce;
+      border-radius: 24px;
+      padding: 40px 20px;
+      text-align: center;
+      width: 100%;
+      margin-top: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .big-button {
+      background-color: #48bb78;
+      color: white;
+      font-size: 32px;
+      font-weight: 900;
+      border: none;
+      border-radius: 20px;
+      padding: 20px 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      margin-top: 20px;
+    }
+
+    .big-button:active {
+      transform: scale(0.95);
+    }
+
+    /* --- Play Screen --- */
+    .dashboard {
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      margin-bottom: 15px;
+    }
+
+    .counter-text {
+      font-size: 28px;
+      font-weight: 900;
+      color: #2b6cb0;
+    }
+
+    /* Current Target Item Zone */
+    .item-zone {
+      background: white;
+      border: 4px solid #3182ce;
+      border-radius: 24px;
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+
+    .item-symbol {
+      font-size: 90px;
+      line-height: 1;
+    }
+
+    .item-label {
+      font-size: 26px;
+      font-weight: 800;
+      color: #2d3748;
+      margin-top: 10px;
+    }
+
+    /* Categories Grid */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    .category-card {
+      background: white;
+      border: 4px solid #cbd5e0;
+      border-radius: 20px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    }
+
+    .category-card:active {
+      transform: scale(0.95);
+    }
+
+    .category-symbol {
+      font-size: 55px;
+      line-height: 1;
+    }
+
+    .category-label {
+      font-size: 20px;
+      font-weight: 800;
+      color: #2d3748;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Feedback Flashes */
+    .category-card.flash-correct {
+      background-color: #c6f6d5 !important;
+      border-color: #48bb78 !important;
+    }
+
+    .category-card.flash-wrong {
+      background-color: #fed7d7 !important;
+      border-color: #e53e3e !important;
+    }
+
+    /* --- Summary Screen --- */
+    .summary-card {
+      background: white;
+      border: 4px dashed #3182ce;
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .summary-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #2b6cb0;
+      margin-bottom: 10px;
+    }
+
+    .screenshot-notice {
+      background: #ebf8ff;
+      border: 2px solid #3182ce;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #2b6cb0;
+      margin-bottom: 20px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .summary-item {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="start-card">
+      <div style="font-size: 80px;">🧺</div>
+      <h1 style="font-size: 36px; color: #2b6cb0; margin: 10px 0;">Item Sorter</h1>
+      <p style="font-size: 20px; color: #4a5568;">Sort 20 items into the right boxes!</p>
+      <button class="big-button" onclick="startGame()">▶ START</button>
+    </div>
+  </div>
+
+  <!-- 2. PLAY SCREEN -->
+  <div class="screen" id="playScreen">
+    <div class="dashboard">
+      <div class="counter-text" id="counterText">1 / 20</div>
+      <div style="font-size: 20px; font-weight: bold; color: #718096;">Tap the matching box!</div>
+    </div>
+
+    <!-- Active Target Item -->
+    <div class="item-zone">
+      <div class="item-symbol" id="targetSymbol">❓</div>
+      <div class="item-label" id="targetLabel">Item Name</div>
+    </div>
+
+    <!-- 6 Categories -->
+    <div class="categories-grid" id="categoriesGrid"></div>
+  </div>
+
+  <!-- 3. SUMMARY SCREEN -->
+  <div class="screen" id="summaryScreen">
+    <div class="summary-card">
+      <div style="font-size: 60px;">🎉🏆🎉</div>
+      <div class="summary-title">Great Job!</div>
+      <div class="screenshot-notice">📸 Take a screenshot of your results!</div>
+
+      <div class="summary-grid" id="summaryGrid"></div>
+
+      <button class="big-button" onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_ITEMS = 20;
+
+    // 6 Categories
+    const CATEGORIES = [
+      { id: 'clothes', name: 'Clothes', symbol: '👕', color: '#4299e1' },
+      { id: 'jewellery', name: 'Jewellery', symbol: '💍', color: '#ed8936' },
+      { id: 'food', name: 'Food', symbol: '🍎', color: '#48bb78' },
+      { id: 'electronics', name: 'Electronics', symbol: '💻', color: '#9f7aea' },
+      { id: 'toys', name: 'Toys', symbol: '🧸', color: '#ecc94b' },
+      { id: 'selfcare', name: 'Self-Care', symbol: '🪥', color: '#38b2ac' }
+    ];
+
+    // Item Pool
+    const ALL_ITEMS = [
+      { name: 'Shirt', symbol: '👕', cat: 'clothes' },
+      { name: 'Socks', symbol: '🧦', cat: 'clothes' },
+      { name: 'Pants', symbol: '👖', cat: 'clothes' },
+      { name: 'Hat', symbol: '🧢', cat: 'clothes' },
+      { name: 'Dress', symbol: '👗', cat: 'clothes' },
+      
+      { name: 'Ring', symbol: '💍', cat: 'jewellery' },
+      { name: 'Watch', symbol: '⌚', cat: 'jewellery' },
+      { name: 'Necklace', symbol: '📿', cat: 'jewellery' },
+      { name: 'Crown', symbol: '👑', cat: 'jewellery' },
+      
+      { name: 'Apple', symbol: '🍎', cat: 'food' },
+      { name: 'Banana', symbol: '🍌', cat: 'food' },
+      { name: 'Pizza', symbol: '🍕', cat: 'food' },
+      { name: 'Bread', symbol: '🍞', cat: 'food' },
+      
+      { name: 'Laptop', symbol: '💻', cat: 'electronics' },
+      { name: 'Phone', symbol: '📱', cat: 'electronics' },
+      { name: 'Headphones', symbol: '🎧', cat: 'electronics' },
+      { name: 'TV', symbol: '📺', cat: 'electronics' },
+      
+      { name: 'Teddy Bear', symbol: '🧸', cat: 'toys' },
+      { name: 'Toy Car', symbol: '🚗', cat: 'toys' },
+      { name: 'Puzzle', symbol: '🧩', cat: 'toys' },
+      { name: 'Balloon', symbol: '🎈', cat: 'toys' },
+      
+      { name: 'Toothbrush', symbol: '🪥', cat: 'selfcare' },
+      { name: 'Soap', symbol: '🧼', cat: 'selfcare' },
+      { name: 'Lotion', symbol: '🧴', cat: 'selfcare' },
+      { name: 'Tissue', symbol: '🧻', cat: 'selfcare' }
+    ];
+
+    let currentRoundItems = [];
+    let currentIndex = 0;
+    let sortedHistory = [];
+    let isProcessing = false;
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function renderCategories() {
+      const grid = document.getElementById('categoriesGrid');
+      grid.innerHTML = '';
+
+      CATEGORIES.forEach(cat => {
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.style.borderColor = cat.color;
+        card.innerHTML = `
+          <div class="category-symbol">${cat.symbol}</div>
+          <div class="category-label">${cat.name}</div>
+        `;
+
+        card.onclick = () => handleSort(cat.id, card);
+        grid.appendChild(card);
+      });
+    }
+
+    function startGame() {
+      // Pick 20 random items
+      currentRoundItems = [...ALL_ITEMS].sort(() => 0.5 - Math.random()).slice(0, TOTAL_ITEMS);
+      currentIndex = 0;
+      sortedHistory = [];
+      isProcessing = false;
+
+      renderCategories();
+      showScreen('playScreen');
+      loadCurrentItem();
+    }
+
+    function loadCurrentItem() {
+      const item = currentRoundItems[currentIndex];
+      document.getElementById('counterText').innerText = `${currentIndex + 1} / ${TOTAL_ITEMS}`;
+      document.getElementById('targetSymbol').innerText = item.symbol;
+      document.getElementById('targetLabel').innerText = item.name;
+
+      speakText(item.name);
+    }
+
+    function handleSort(selectedCatId, cardElement) {
+      if (isProcessing) return;
+
+      const activeItem = currentRoundItems[currentIndex];
+
+      if (selectedCatId === activeItem.cat) {
+        // --- CORRECT MATCH ---
+        isProcessing = true;
+        cardElement.classList.add('flash-correct');
+        
+        if ('vibrate' in navigator) navigator.vibrate(80);
+
+        sortedHistory.push({
+          itemName: activeItem.name,
+          itemSymbol: activeItem.symbol,
+          categoryName: CATEGORIES.find(c => c.id === activeItem.cat).name
+        });
+
+        setTimeout(() => {
+          cardElement.classList.remove('flash-correct');
+          currentIndex++;
+
+          if (currentIndex < TOTAL_ITEMS) {
+            loadCurrentItem();
+            isProcessing = false;
+          } else {
+            showSummary();
+          }
+        }, 400);
+
+      } else {
+        // --- WRONG MATCH (Errorless / Guided) ---
+        cardElement.classList.add('flash-wrong');
+        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+        speakText("Try another one");
+
+        setTimeout(() => {
+          cardElement.classList.remove('flash-wrong');
+        }, 400);
+      }
+    }
+
+    function showSummary() {
+      showScreen('summaryScreen');
+      speakText("Awesome job! You finished sorting!");
+
+      const grid = document.getElementById('summaryGrid');
+      grid.innerHTML = '';
+
+      sortedHistory.forEach(entry => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'summary-item';
+        itemDiv.innerHTML = `
+          <span style="font-size: 30px;">${entry.itemSymbol}</span>
+          <div>
+            <div>${entry.itemName}</div>
+            <div style="font-size: 13px; color: #718096;">${entry.categoryName}</div>
+          </div>
+        `;
+        grid.appendChild(itemDiv);
+      });
+    }
+  </script>
+</body>
+</html>

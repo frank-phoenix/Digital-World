@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopping Symbols Click Game</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:linear-gradient(#6ec6ff,#b3e5fc);
+    overflow:hidden;
+}
+
+header{
+    background:#1565c0;
+    color:white;
+    text-align:center;
+    padding:18px;
+    font-size:34px;
+    font-weight:bold;
+}
+
+#info{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    background:white;
+    font-size:28px;
+    font-weight:bold;
+    padding:12px;
+}
+
+#game{
+    position:relative;
+    width:100vw;
+    height:calc(100vh - 130px);
+    overflow:hidden;
+}
+
+.item{
+    position:absolute;
+    width:110px;
+    height:110px;
+    border-radius:25px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:56px;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:0 8px 15px rgba(0,0,0,.25);
+    transition:.2s;
+}
+
+.item:hover{
+    transform:scale(1.08);
+}
+
+.correct{
+    background:#43a047;
+    color:white;
+}
+
+.false{
+    background:#ef5350;
+    color:white;
+}
+
+#celebrate{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:90px;
+    display:none;
+    animation:pop .7s infinite alternate;
+    z-index:999;
+    text-align:center;
+}
+
+@keyframes pop{
+from{transform:translate(-50%,-50%) scale(1);}
+to{transform:translate(-50%,-50%) scale(1.25);}
+}
+
+.confetti{
+    position:absolute;
+    width:15px;
+    height:15px;
+    animation:fall 3s linear forwards;
+}
+
+@keyframes fall{
+0%{
+transform:translateY(-20px) rotate(0deg);
+}
+100%{
+transform:translateY(120vh) rotate(720deg);
+}
+}
+</style>
+</head>
+
+<body>
+
+<header>Click the Shopping Symbols!</header>
+
+<div id="info">
+<div>⭐ Score: <span id="score">0</span>/20</div>
+<div>⏱ Time: <span id="timer">0</span>s</div>
+</div>
+
+<div id="game">
+<div id="celebrate">🎉<br>Well Done!</div>
+</div>
+
+<script>
+
+const correctItems=[
+"£",
+"$",
+"🛒",
+"🔍",
+"⭐",
+"✅"
+];
+
+const falseItems=[
+"🍎","🚗","🐶","🎈","🍕","📺","⚽","🚲",
+"🍔","🌞","🎵","📚","💡","🏠","🎁","🍩",
+"🚌","🐱","❤️","📷","🦋","🎮","🌈","🚀",
+"🍌","🎂","🦄","🐸","🚁","🌵"
+];
+
+const TARGET_SCORE=20;
+const TOTAL_ITEMS=12;
+const MIN_CORRECT=3;
+
+let score=0;
+let seconds=0;
+
+const game=document.getElementById("game");
+
+setInterval(()=>{
+seconds++;
+document.getElementById("timer").textContent=seconds;
+},1000);
+
+function beep(freq,duration){
+
+const ctx=new(window.AudioContext||window.webkitAudioContext)();
+
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
+
+osc.type="sine";
+osc.frequency.value=freq;
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+gain.gain.setValueAtTime(.3,ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);
+
+osc.start();
+osc.stop(ctx.currentTime+duration);
+
+}
+
+function celebration(){
+
+document.getElementById("celebrate").style.display="block";
+
+beep(700,.2);
+setTimeout(()=>beep(900,.2),180);
+setTimeout(()=>beep(1200,.4),350);
+
+for(let i=0;i<250;i++){
+
+let c=document.createElement("div");
+
+c.className="confetti";
+c.style.left=Math.random()*window.innerWidth+"px";
+c.style.background="hsl("+Math.random()*360+",100%,50%)";
+
+game.appendChild(c);
+
+setTimeout(()=>c.remove(),3000);
+
+}
+
+}
+
+function makeItem(forceCorrect=false){
+
+if(score>=TARGET_SCORE) return;
+
+const correct=forceCorrect || Math.random()<0.35;
+
+let div=document.createElement("div");
+
+div.className="item "+(correct?"correct":"false");
+div.dataset.correct=correct;
+
+div.innerHTML=correct
+?correctItems[Math.floor(Math.random()*correctItems.length)]
+:falseItems[Math.floor(Math.random()*falseItems.length)];
+
+div.style.left=Math.random()*(window.innerWidth-140)+"px";
+div.style.top=Math.random()*(window.innerHeight-260)+"px";
+
+div.onclick=function(){
+
+if(correct){
+
+score++;
+document.getElementById("score").textContent=score;
+
+beep(850,.15);
+
+if(score>=TARGET_SCORE){
+
+this.remove();
+celebration();
+return;
+
+}
+
+}else{
+
+beep(220,.25);
+
+}
+
+this.remove();
+
+setTimeout(checkBoard,100);
+
+};
+
+game.appendChild(div);
+
+}
+
+function checkBoard(){
+
+while(document.querySelectorAll('.item[data-correct="true"]').length<MIN_CORRECT){
+makeItem(true);
+}
+
+while(document.querySelectorAll(".item").length<TOTAL_ITEMS){
+makeItem(false);
+}
+
+}
+
+// Initial board
+for(let i=0;i<MIN_CORRECT;i++){
+makeItem(true);
+}
+
+for(let i=MIN_CORRECT;i<TOTAL_ITEMS;i++){
+makeItem(false);
+}
+
+// Gentle movement
+setInterval(()=>{
+
+if(score>=TARGET_SCORE) return;
+
+document.querySelectorAll(".item").forEach(item=>{
+
+let x=parseFloat(item.style.left);
+let y=parseFloat(item.style.top);
+
+x+=Math.random()*30-15;
+y+=Math.random()*30-15;
+
+x=Math.max(0,Math.min(window.innerWidth-120,x));
+y=Math.max(0,Math.min(window.innerHeight-240,y));
+
+item.style.left=x+"px";
+item.style.top=y+"px";
+
+});
+
+},900);
+
+</script>
+
+</body>
+</html>

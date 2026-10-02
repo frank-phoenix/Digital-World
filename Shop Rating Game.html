@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Online Shop Reviews</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#f5f7ff;
+    padding:20px;
+}
+
+h1 {
+    font-size:42px;
+}
+
+#item {
+    background:white;
+    border-radius:20px;
+    padding:30px;
+    margin:20px auto;
+    max-width:700px;
+    box-shadow:0 0 10px #aaa;
+}
+
+.symbol {
+    font-size:100px;
+}
+
+.name {
+    font-size:35px;
+    font-weight:bold;
+}
+
+button {
+    font-size:28px;
+    padding:15px;
+    margin:10px;
+    border-radius:15px;
+    cursor:pointer;
+}
+
+.star {
+    font-size:45px;
+}
+
+textarea {
+    font-size:25px;
+    width:80%;
+    height:80px;
+}
+
+#summary {
+    display:none;
+    background:#fff3cd;
+    padding:30px;
+    border-radius:20px;
+    font-size:28px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🛒 My Online Shop ⭐</h1>
+
+<button onclick="speak()">🔊 Read Page</button>
+
+<div id="item">
+
+<div class="symbol" id="symbol"></div>
+
+<div class="name" id="name"></div>
+
+<button onclick="speakItem()">🔊 Hear Item</button>
+
+<h2>How much do you like it?</h2>
+
+<div id="stars">
+<button class="star" onclick="rate(1)">⭐</button>
+<button class="star" onclick="rate(2)">⭐</button>
+<button class="star" onclick="rate(3)">⭐</button>
+<button class="star" onclick="rate(4)">⭐</button>
+<button class="star" onclick="rate(5)">⭐</button>
+</div>
+
+<h2>Your review</h2>
+
+<textarea id="review" placeholder="I like..."></textarea>
+
+<br>
+
+<button onclick="next()">Next Item ➡️</button>
+
+</div>
+
+
+<div id="summary">
+
+<h1>🎉 Great Job! 🎉</h1>
+
+<p id="result"></p>
+
+<button onclick="location.reload()">Play Again 🔄</button>
+
+</div>
+
+
+
+<script>
+
+let items=[
+["🍕","Pizza"],
+["🎧","Headphones"],
+["🧸","Teddy Bear"],
+["🚗","Toy Car"],
+["📚","Book"],
+["🍦","Ice Cream"],
+["⚽","Football"],
+["🎮","Game Controller"],
+["👟","Trainers"],
+["🍎","Apple"]
+];
+
+
+let current=0;
+let scores=[];
+let reviews=[];
+
+
+function shuffle(){
+items.sort(()=>Math.random()-0.5);
+}
+
+shuffle();
+
+
+function show(){
+
+document.getElementById("symbol").innerHTML=items[current][0];
+
+document.getElementById("name").innerHTML=items[current][1];
+
+document.getElementById("review").value="";
+
+}
+
+
+function rate(number){
+
+scores[current]=number;
+
+speakText("You gave "+number+" stars");
+
+}
+
+
+function next(){
+
+reviews[current]=document.getElementById("review").value;
+
+current++;
+
+if(current>=items.length){
+
+finish();
+
+}else{
+
+show();
+
+}
+
+}
+
+
+function speakItem(){
+
+speakText("This item is "+items[current][1]);
+
+}
+
+
+function speak(){
+
+speakText("Welcome to my online shop. Choose an item, give stars and write a review.");
+
+}
+
+
+function speakText(text){
+
+let speech=new SpeechSynthesisUtterance(text);
+
+speech.rate=0.8;
+
+speechSynthesis.speak(speech);
+
+}
+
+
+
+function finish(){
+
+document.getElementById("item").style.display="none";
+
+document.getElementById("summary").style.display="block";
+
+
+let total=0;
+
+scores.forEach(x=>{
+
+if(x) total+=x;
+
+});
+
+
+let average=Math.round(total/items.length);
+
+
+document.getElementById("result").innerHTML=
+
+"You reviewed 10 items! ⭐<br><br>"+
+"Your average rating was "+average+" stars ⭐<br><br>"+
+"You are an amazing online shopper! 🛒🎉";
+
+
+speakText("Great job. You reviewed ten items. You are an amazing online shopper.");
+
+}
+
+
+show();
+
+</script>
+
+
+</body>
+</html>

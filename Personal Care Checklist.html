@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Care Checklist</title>
+    <style>
+        :root {
+            --bg-color: #f4f9ff;
+            --card-bg: #e1f0ff;
+            --text-color: #2c3e50;
+            --green-check: #28a745;
+            --red-cross: #dc3545;
+            --primary-blue: #007bff;
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header Styling */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+        }
+
+        /* Container & Grid Layout */
+        .checklist-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 950px;
+        }
+
+        /* Individual Card */
+        .item-card {
+            background-color: white;
+            border: 3px solid #b3d7ff;
+            border-radius: var(--border-radius);
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .item-card.completed-yes {
+            border-color: var(--green-check);
+            background-color: #e8f8ec;
+        }
+
+        .item-card.completed-no {
+            border-color: var(--red-cross);
+            background-color: #fdeaea;
+        }
+
+        /* Visual Label Box */
+        .visual-label {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 110px;
+            min-height: 90px;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .visual-label:hover {
+            opacity: 0.9;
+        }
+
+        .visual-label .icon {
+            font-size: 2.5rem;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .visual-label .text {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* Compact choice group for Bath / Shower */
+        .choice-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .choice-group .visual-label {
+            width: 75px;
+            min-height: 85px;
+            padding: 6px 4px;
+        }
+
+        .choice-group .visual-label .icon {
+            font-size: 2rem;
+        }
+
+        .choice-group .visual-label .text {
+            font-size: 0.85rem;
+        }
+
+        .or-text {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #666;
+        }
+
+        /* Big Decision Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            background: none;
+            border: none;
+            font-size: 3rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 12px;
+            transition: transform 0.1s, background-color 0.2s;
+            line-height: 1;
+        }
+
+        .btn-action:active {
+            transform: scale(0.9);
+        }
+
+        .btn-yes {
+            color: var(--green-check);
+        }
+
+        .btn-yes:hover, .btn-yes.active {
+            background-color: rgba(40, 167, 69, 0.15);
+        }
+
+        .btn-no {
+            color: var(--red-cross);
+        }
+
+        .btn-no:hover, .btn-no.active {
+            background-color: rgba(220, 53, 69, 0.15);
+        }
+
+        /* Footer Controls */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-main {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s;
+        }
+
+        .btn-main:active {
+            transform: scale(0.95);
+        }
+
+        .btn-finish {
+            background-color: var(--green-check);
+            color: white;
+        }
+
+        .btn-restart {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        /* Modal Overlay for Reward and Summary */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .reward-stars {
+            font-size: 4rem;
+            animation: bounce 1s infinite alternate;
+            margin: 10px 0;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        .summary-list {
+            text-align: left;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="header-icon">🚿</span>
+        <h1>Personal Care Checklist</h1>
+        <span class="header-icon">📋</span>
+    </header>
+
+    <main class="checklist-container">
+
+        <!-- Bath or Shower Choice -->
+        <div class="item-card" id="card-wash">
+            <div class="choice-group">
+                <div class="visual-label" onclick="speakText('Bath')">
+                    <span class="icon">🛁</span>
+                    <span class="text">bath</span>
+                </div>
+                <span class="or-text">or</span>
+                <div class="visual-label" onclick="speakText('Shower')">
+                    <span class="icon">🚿</span>
+                    <span class="text">shower</span>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('wash', 'yes', 'Bath or shower done')" aria-label="Bath or Shower done">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('wash', 'no', 'Bath or shower not done')" aria-label="Bath or Shower not done">✖</button>
+            </div>
+        </div>
+
+        <!-- Brushed Teeth -->
+        <div class="item-card" id="card-teeth">
+            <div class="visual-label" onclick="speakText('Brushed teeth')">
+                <span class="icon">🪥</span>
+                <span class="text">brushed teeth</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('teeth', 'yes', 'Brushed teeth done')" aria-label="Brushed teeth done">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('teeth', 'no', 'Brushed teeth not done')" aria-label="Brushed teeth not done">✖</button>
+            </div>
+        </div>
+
+        <!-- Sleep -->
+        <div class="item-card" id="card-sleep">
+            <div class="visual-label" onclick="speakText('Good sleep')">
+                <span class="icon">😴</span>
+                <span class="text">sleep</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('sleep', 'yes', 'Good sleep')" aria-label="Good sleep">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('sleep', 'no', 'Did not sleep well')" aria-label="Did not sleep well">✖</button>
+            </div>
+        </div>
+
+        <!-- Deodorant -->
+        <div class="item-card" id="card-deodorant">
+            <div class="visual-label" onclick="speakText('Deodorant')">
+                <span class="icon">🧴</span>
+                <span class="text">deodorant</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('deodorant', 'yes', 'Deodorant done')" aria-label="Deodorant done">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('deodorant', 'no', 'Deodorant not done')" aria-label="Deodorant not done">✖</button>
+            </div>
+        </div>
+
+        <!-- Clean Clothes -->
+        <div class="item-card" id="card-clothes">
+            <div class="visual-label" onclick="speakText('Clean clothes')">
+                <span class="icon">👕</span>
+                <span class="text">clean clothes</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('clothes', 'yes', 'Clean clothes done')" aria-label="Clean clothes done">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('clothes', 'no', 'Clean clothes not done')" aria-label="Clean clothes not done">✖</button>
+            </div>
+        </div>
+
+        <!-- Breakfast -->
+        <div class="item-card" id="card-breakfast">
+            <div class="visual-label" onclick="speakText('Breakfast')">
+                <span class="icon">🥣</span>
+                <span class="text">breakfast</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-yes" onclick="setItemState('breakfast', 'yes', 'Breakfast done')" aria-label="Breakfast done">✔</button>
+                <button class="btn-action btn-no" onclick="setItemState('breakfast', 'no', 'Breakfast not done')" aria-label="Breakfast not done">✖</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Controls -->
+    <div class="controls">
+        <button class="btn-main btn-finish" onclick="finishChecklist()">Finish & See Summary 🎉</button>
+        <button class="btn-main btn-restart" onclick="resetChecklist()">Restart 🔄</button>
+    </div>
+
+    <!-- Celebration and Summary Modal -->
+    <div class="modal-overlay" id="reward-modal">
+        <div class="modal-card">
+            <h2>Well Done! 🎉</h2>
+            <div class="reward-stars">🌟 ⭐ 🌟</div>
+            <p>You finished your personal care checklist!</p>
+            
+            <div class="summary-list" id="summary-content">
+                <!-- Dynamic summary inserted here -->
+            </div>
+
+            <button class="btn-main btn-restart" onclick="closeModalAndReset()">Start Again 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const items = {
+            wash: { label: 'Bath / Shower', status: null },
+            teeth: { label: 'Brushed Teeth', status: null },
+            sleep: { label: 'Sleep', status: null },
+            deodorant: { label: 'Deodorant', status: null },
+            clothes: { label: 'Clean Clothes', status: null },
+            breakfast: { label: 'Breakfast', status: null }
+        };
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function setItemState(key, status, speechMessage) {
+            items[key].status = status;
+            const card = document.getElementById(`card-${key}`);
+            const yesBtn = card.querySelector('.btn-yes');
+            const noBtn = card.querySelector('.btn-no');
+
+            speakText(speechMessage);
+
+            card.classList.remove('completed-yes', 'completed-no');
+            yesBtn.classList.remove('active');
+            noBtn.classList.remove('active');
+
+            if (status === 'yes') {
+                card.classList.add('completed-yes');
+                yesBtn.classList.add('active');
+            } else if (status === 'no') {
+                card.classList.add('completed-no');
+                noBtn.classList.add('active');
+            }
+        }
+
+        function finishChecklist() {
+            const summaryContainer = document.getElementById('summary-content');
+            summaryContainer.innerHTML = '';
+
+            let completedCount = 0;
+            let totalItems = Object.keys(items).length;
+
+            for (const key in items) {
+                const item = items[key];
+                const div = document.createElement('div');
+                div.className = 'summary-item';
+
+                let statusSymbol = '❓ Not answered';
+                if (item.status === 'yes') {
+                    statusSymbol = '🟢 Done';
+                    completedCount++;
+                } else if (item.status === 'no') {
+                    statusSymbol = '🔴 Skipped';
+                }
+
+                div.innerHTML = `<span>${item.label}</span> <strong>${statusSymbol}</strong>`;
+                summaryContainer.appendChild(div);
+            }
+
+            const modal = document.getElementById('reward-modal');
+            modal.classList.add('active');
+
+            const rewardMessage = `Great job! You completed ${completedCount} out of ${totalItems} tasks!`;
+            speakText(`Well done! You finished your personal care checklist. ${rewardMessage}`);
+        }
+
+        function resetChecklist() {
+            for (const key in items) {
+                items[key].status = null;
+                const card = document.getElementById(`card-${key}`);
+                card.classList.remove('completed-yes', 'completed-no');
+                const buttons = card.querySelectorAll('.btn-action');
+                buttons.forEach(btn => btn.classList.remove('active'));
+            }
+            speakText("Checklist restarted.");
+        }
+
+        function closeModalAndReset() {
+            document.getElementById('reward-modal').classList.remove('active');
+            resetChecklist();
+        }
+    </script>
+</body>
+</html>

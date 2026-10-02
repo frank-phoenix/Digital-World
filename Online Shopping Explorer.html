@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Online Shopping Explorer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f4f8;
+      color: #1a202c;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px 0;
+      color: #2b6cb0;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #4a5568;
+    }
+
+    /* Main Grid Layout */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 1000px;
+      margin: 0 auto 30px auto;
+    }
+
+    .item-card {
+      background: white;
+      border: 3px solid #cbd5e0;
+      border-radius: 16px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: border-color 0.2s, transform 0.1s;
+    }
+
+    .item-card.selected {
+      border-color: #3182ce;
+      background-color: #ebf8ff;
+    }
+
+    .icon-wrapper {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 10px;
+    }
+
+    .icon-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .item-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .ext-link {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: #2b6cb0;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .price-input-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .price-input-group span {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .price-input {
+      width: 80px;
+      padding: 6px;
+      font-size: 16px;
+      border: 2px solid #cbd5e0;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .select-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background-color: #4299e1;
+      color: white;
+      cursor: pointer;
+    }
+
+    .item-card.selected .select-btn {
+      background-color: #e53e3e;
+    }
+
+    /* Summary Card Section (Screenshot Zone) */
+    .summary-section {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border: 4px dashed #3182ce;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .summary-title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2b6cb0;
+    }
+
+    .summary-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 15px 0;
+    }
+
+    .summary-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #edf2f7;
+      font-size: 18px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      font-weight: 800;
+      color: #2d3748;
+      padding-top: 10px;
+    }
+
+    .screenshot-hint {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #718096;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🛍️ Online Shopping Practice</h1>
+    <div class="subtitle">Click "Find Online" to see the real item, type its price, then select it!</div>
+  </header>
+
+  <div class="grid-container" id="itemsGrid"></div>
+
+  <!-- Summary Section for Screenshots -->
+  <div class="summary-section">
+    <div class="summary-header">
+      <div class="summary-title">📸 My Shopping List Summary</div>
+      <div id="itemCount" style="font-weight: bold;">0 items selected</div>
+    </div>
+    <ul class="summary-list" id="summaryList">
+      <li style="color: #a0aec0; font-style: italic;">No items selected yet.</li>
+    </ul>
+    <div class="total-row">
+      <span>Total Estimated Price:</span>
+      <span id="totalPrice">$0.00</span>
+    </div>
+    <div class="screenshot-hint">📸 Take a screenshot of this section when finished!</div>
+  </div>
+
+  <script>
+    const ITEMS = [
+      {
+        id: 'ps5',
+        name: 'PlayStation',
+        link: 'https://www.target.com/s?searchTerm=playstation+5',
+        defaultPrice: 499.99,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4M15 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>`
+      },
+      {
+        id: 'shoes',
+        name: 'Running Shoes',
+        link: 'https://www.target.com/s?searchTerm=running+shoes',
+        defaultPrice: 45.00,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#dd6b20" stroke-width="2"><path d="M2 17l3-7 4 1 3 3 6 1 4 2v2H2z"/><circle cx="7" cy="17" r="1"/><circle cx="11" cy="17" r="1"/></svg>`
+      },
+      {
+        id: 'jumper',
+        name: 'Jumper (Sweatshirt)',
+        link: 'https://www.target.com/s?searchTerm=sweatshirt',
+        defaultPrice: 25.00,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#d69e2e" stroke-width="2"><path d="M20 8l-4-4H8L4 8l3 3v9h10V11l3-3z"/></svg>`
+      },
+      {
+        id: 'bike',
+        name: 'Bicycle',
+        link: 'https://www.target.com/s?searchTerm=bicycle',
+        defaultPrice: 120.00,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l1.5 4.5M5.5 17.5l4-7.5h4l3.5 7.5M9.5 10l-2-4H4"/></svg>`
+      },
+      {
+        id: 'fidget',
+        name: 'Fidget Spinner',
+        link: 'https://www.target.com/s?searchTerm=fidget+spinner',
+        defaultPrice: 5.99,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#805ad5" stroke-width="2"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="5" r="3"/><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/></svg>`
+      },
+      {
+        id: 'watch',
+        name: 'Watch',
+        link: 'https://www.target.com/s?searchTerm=watch',
+        defaultPrice: 35.00,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#319795" stroke-width="2"><circle cx="12" cy="12" r="6"/><path d="M12 9v3l2 2M9 2h6M9 22h6"/></svg>`
+      },
+      {
+        id: 'shampoo',
+        name: 'Shampoo',
+        link: 'https://www.target.com/s?searchTerm=shampoo',
+        defaultPrice: 6.50,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2"><rect x="7" y="8" width="10" height="13" rx="2"/><path d="M10 8V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3M9 4h6"/></svg>`
+      },
+      {
+        id: 'tv',
+        name: 'Smart TV',
+        link: 'https://www.target.com/s?searchTerm=tv',
+        defaultPrice: 250.00,
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="#2d3748" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`
+      }
+    ];
+
+    const selectedItems = new Map();
+
+    function renderItems() {
+      const container = document.getElementById('itemsGrid');
+      container.innerHTML = '';
+
+      ITEMS.forEach(item => {
+        const isSelected = selectedItems.has(item.id);
+        const card = document.createElement('div');
+        card.className = `item-card ${isSelected ? 'selected' : ''}`;
+
+        card.innerHTML = `
+          <div class="icon-wrapper">${item.svg}</div>
+          <div class="item-title">${item.name}</div>
+          <a class="ext-link" href="${item.link}" target="_blank" rel="noopener">Find Online ↗</a>
+          <div class="price-input-group">
+            <span>$</span>
+            <input type="number" class="price-input" id="price-${item.id}" value="${item.defaultPrice}" step="0.01" />
+          </div>
+          <button class="select-btn" onclick="toggleSelect('${item.id}')">
+            ${isSelected ? 'Remove' : 'Add to List'}
+          </button>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function toggleSelect(id) {
+      if (selectedItems.has(id)) {
+        selectedItems.delete(id);
+      } else {
+        const priceInput = document.getElementById(`price-${id}`);
+        const priceVal = parseFloat(priceInput.value) || 0;
+        const itemObj = ITEMS.find(i => i.id === id);
+        selectedItems.set(id, { name: itemObj.name, price: priceVal });
+      }
+
+      renderItems();
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const listEl = document.getElementById('summaryList');
+      const countEl = document.getElementById('itemCount');
+      const totalEl = document.getElementById('totalPrice');
+
+      if (selectedItems.size === 0) {
+        listEl.innerHTML = `<li style="color: #a0aec0; font-style: italic;">No items selected yet.</li>`;
+        countEl.innerText = `0 items selected`;
+        totalEl.innerText = `$0.00`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      let sum = 0;
+
+      selectedItems.forEach(item => {
+        sum += item.price;
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${item.name}</span><strong>$${item.price.toFixed(2)}</strong>`;
+        listEl.appendChild(li);
+      });
+
+      countEl.innerText = `${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''} selected`;
+      totalEl.innerText = `$${sum.toFixed(2)}`;
+    }
+
+    renderItems();
+  </script>
+</body>
+</html>

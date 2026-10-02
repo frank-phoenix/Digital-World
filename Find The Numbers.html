@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Big Number Matcher</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      background-color: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .screen {
+      width: 100%;
+      max-width: 650px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* --- Start Screen --- */
+    .card {
+      background: #ffffff;
+      border: 6px solid #3182ce;
+      border-radius: 28px;
+      padding: 30px 20px;
+      text-align: center;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+
+    .big-btn {
+      background-color: #38a169;
+      color: #ffffff;
+      font-size: 36px;
+      font-weight: 900;
+      border: none;
+      border-radius: 24px;
+      padding: 22px 40px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .big-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* --- Play Header --- */
+    .progress-bar {
+      width: 100%;
+      background: #ffffff;
+      border: 3px solid #cbd5e0;
+      border-radius: 20px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #2b6cb0;
+    }
+
+    /* Target & Input Boxes */
+    .display-zone {
+      width: 100%;
+      background: #ffffff;
+      border: 6px solid #3182ce;
+      border-radius: 28px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    .target-box {
+      display: flex;
+      gap: 12px;
+    }
+
+    .num-slot {
+      width: 70px;
+      height: 90px;
+      background: #ebf8ff;
+      border: 4px solid #3182ce;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 55px;
+      font-weight: 900;
+      color: #2b6cb0;
+    }
+
+    .input-box {
+      display: flex;
+      gap: 12px;
+    }
+
+    .typed-slot {
+      width: 70px;
+      height: 90px;
+      background: #f7fafc;
+      border: 4px dashed #a0aec0;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 55px;
+      font-weight: 900;
+      color: #2d3748;
+    }
+
+    .typed-slot.active {
+      border-style: solid;
+      border-color: #3182ce;
+      background: #ffffff;
+    }
+
+    .typed-slot.correct {
+      background-color: #c6f6d5 !important;
+      border-color: #38a169 !important;
+      color: #22543d !important;
+    }
+
+    .typed-slot.wrong {
+      background-color: #fed7d7 !important;
+      border-color: #e53e3e !important;
+      color: #742a2a !important;
+    }
+
+    /* Giant Keypad */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .key-btn {
+      background: #ffffff;
+      border: 5px solid #cbd5e0;
+      border-radius: 24px;
+      padding: 18px 0;
+      font-size: 48px;
+      font-weight: 900;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      transition: background-color 0.15s, transform 0.1s;
+    }
+
+    .key-btn:active {
+      transform: scale(0.92);
+      background-color: #e2e8f0;
+    }
+
+    /* --- Summary Screen --- */
+    .summary-card {
+      background: #ffffff;
+      border: 6px dashed #3182ce;
+      border-radius: 28px;
+      padding: 28px 20px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .summary-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #2b6cb0;
+      margin: 10px 0;
+    }
+
+    .screenshot-banner {
+      background: #ebf8ff;
+      border: 3px solid #3182ce;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #2b6cb0;
+      margin: 16px 0;
+    }
+
+    .summary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .summary-row {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="card">
+      <div style="font-size: 90px;">🔢</div>
+      <h1 style="font-size: 36px; color: #2b6cb0; margin: 10px 0;">Number Matcher</h1>
+      <p style="font-size: 22px; color: #4a5568;">Type the 4 big numbers you see!</p>
+      <button class="big-btn" onclick="startGame()">▶ START</button>
+    </div>
+  </div>
+
+  <!-- 2. PLAY SCREEN -->
+  <div class="screen" id="playScreen">
+    <div class="progress-bar">
+      <span id="roundProgress">Round: 1 / 5</span>
+      <span>Find the Numbers 🔢</span>
+    </div>
+
+    <div class="display-zone">
+      <!-- Target 4 Numbers -->
+      <div class="target-box" id="targetBox"></div>
+
+      <!-- User Typed Input Slots -->
+      <div class="input-box" id="inputBox">
+        <div class="typed-slot" id="slot-0"></div>
+        <div class="typed-slot" id="slot-1"></div>
+        <div class="typed-slot" id="slot-2"></div>
+        <div class="typed-slot" id="slot-3"></div>
+      </div>
+    </div>
+
+    <!-- On-screen Keypad -->
+    <div class="keypad">
+      <button class="key-btn" onclick="pressNumber('1')">1</button>
+      <button class="key-btn" onclick="pressNumber('2')">2</button>
+      <button class="key-btn" onclick="pressNumber('3')">3</button>
+      <button class="key-btn" onclick="pressNumber('4')">4</button>
+      <button class="key-btn" onclick="pressNumber('5')">5</button>
+      <button class="key-btn" onclick="pressNumber('6')">6</button>
+      <button class="key-btn" onclick="pressNumber('7')">7</button>
+      <button class="key-btn" onclick="pressNumber('8')">8</button>
+      <button class="key-btn" onclick="pressNumber('9')">9</button>
+      <button class="key-btn" style="grid-column: span 3;" onclick="pressNumber('0')">0</button>
+    </div>
+  </div>
+
+  <!-- 3. SUMMARY SCREEN -->
+  <div class="screen" id="summaryScreen">
+    <div class="summary-card">
+      <div style="font-size: 80px;">🎉 🏆 🎉</div>
+      <div class="summary-title">GREAT JOB!</div>
+      
+      <div class="screenshot-banner">📸 PLEASE TAKE A SCREENSHOT NOW</div>
+
+      <div class="summary-list" id="summaryList"></div>
+
+      <button class="big-btn" onclick="startGame()">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_ROUNDS = 5;
+    let currentRound = 0;
+    let targetNumbers = [];
+    let userInputs = [];
+    let completedHistory = [];
+    let isProcessing = false;
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 0.85;
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+      currentRound = 0;
+      completedHistory = [];
+      showScreen('playScreen');
+      nextRound();
+    }
+
+    function nextRound() {
+      currentRound++;
+      userInputs = [];
+      isProcessing = false;
+
+      document.getElementById('roundProgress').innerText = `Round: ${currentRound} / 5`;
+
+      // Generate 4 random digits
+      targetNumbers = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10).toString());
+
+      // Render Target Slots
+      const targetBox = document.getElementById('targetBox');
+      targetBox.innerHTML = '';
+      targetNumbers.forEach(num => {
+        const slot = document.createElement('div');
+        slot.className = 'num-slot';
+        slot.innerText = num;
+        targetBox.appendChild(slot);
+      });
+
+      // Reset User Input Slots
+      for (let i = 0; i < 4; i++) {
+        const slot = document.getElementById(`slot-${i}`);
+        slot.innerText = '';
+        slot.className = 'typed-slot';
+      }
+
+      speakText(`Round ${currentRound}. Type numbers: ${targetNumbers.join(', ')}`);
+    }
+
+    function pressNumber(num) {
+      if (isProcessing || userInputs.length >= 4) return;
+
+      const currentIdx = userInputs.length;
+      const expectedNum = targetNumbers[currentIdx];
+      const slot = document.getElementById(`slot-${currentIdx}`);
+
+      speakText(num);
+
+      if (num === expectedNum) {
+        // --- CORRECT NUMBER TAP ---
+        userInputs.push(num);
+        slot.innerText = num;
+        slot.classList.add('correct');
+
+        if ('vibrate' in navigator) navigator.vibrate(60);
+
+        // Round Completed
+        if (userInputs.length === 4) {
+          isProcessing = true;
+          completedHistory.push(targetNumbers.join(' '));
+
+          setTimeout(() => {
+            if (currentRound < TOTAL_ROUNDS) {
+              nextRound();
+            } else {
+              finishGame();
+            }
+          }, 600);
+        }
+
+      } else {
+        // --- WRONG NUMBER TAP ---
+        slot.innerText = num;
+        slot.classList.add('wrong');
+
+        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+
+        setTimeout(() => {
+          slot.innerText = '';
+          slot.classList.remove('wrong');
+        }, 400);
+      }
+    }
+
+    function finishGame() {
+      showScreen('summaryScreen');
+      speakText("Awesome work! You matched all 5 sets of numbers! Please take a screenshot now.");
+
+      const list = document.getElementById('summaryList');
+      list.innerHTML = '';
+
+      completedHistory.forEach((numStr, idx) => {
+        const item = document.createElement('div');
+        item.className = 'summary-row';
+        item.innerHTML = `
+          <span>Set ${idx + 1}:</span>
+          <span style="letter-spacing: 4px; color: #3182ce;">${numStr}</span>
+          <span>✅</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>

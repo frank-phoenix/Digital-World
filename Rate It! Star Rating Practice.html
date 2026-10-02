@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rate It! Online Shopping Star Ratings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F2F6F6; --card:#FFFFFF; --ink:#132A2E; --sub:#3E5A5E;
+    --teal:#0E5E66; --teal-dark:#0A464C; --coral:#FF6A4D; --coral-dark:#E4502F;
+    --gold:#FFB703; --gold-dim:#E9E3D3; --green:#1F9E6D;
+    --ring: 0 0 0 4px rgba(14,94,102,.25);
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html{scroll-padding-top: env(safe-area-inset-top, 0px);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F2225; --card:#16343A; --ink:#F2F6F6; --sub:#BFD3D5;
+      --teal:#4FC3CE; --teal-dark:#2E8C95; --coral:#FF8A70; --coral-dark:#FF6A4D;
+      --gold:#FFC93C; --gold-dim:#31474B; --green:#3ED197;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F2225; --card:#16343A; --ink:#F2F6F6; --sub:#BFD3D5;
+    --teal:#4FC3CE; --teal-dark:#2E8C95; --coral:#FF8A70; --coral-dark:#FF6A4D;
+    --gold:#FFC93C; --gold-dim:#31474B; --green:#3ED197;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Atkinson Hyperlegible', Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100%;
+  }
+  .wrap{width:100%; max-width:640px; padding:18px 18px calc(24px + env(safe-area-inset-bottom,0px)); flex:1; display:flex; flex-direction:column;}
+
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 2px 16px;}
+  .title{font-weight:700; font-size:22px; letter-spacing:.2px;}
+  .stats{display:flex; gap:10px;}
+  .pill{background:var(--card); border:2px solid var(--gold-dim); border-radius:999px; padding:6px 14px; font-weight:700; font-size:15px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 0 rgba(0,0,0,.05);}
+
+  .progress-track{width:100%; height:14px; border-radius:999px; background:var(--gold-dim); overflow:hidden; margin-bottom:18px;}
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--teal), var(--coral)); width:5%; transition:width .4s ease;}
+
+  .card{
+    background:var(--card); border-radius:28px; padding:32px 24px 26px;
+    box-shadow:0 10px 0 rgba(0,0,0,.06), 0 2px 14px rgba(0,0,0,.06);
+    text-align:center; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    position:relative; min-height:420px;
+  }
+  .emoji{font-size:110px; line-height:1; margin-bottom:8px; filter:drop-shadow(0 6px 8px rgba(0,0,0,.12));}
+  .name{font-size:28px; font-weight:700; margin:6px 0 8px;}
+  .desc{font-size:19px; color:var(--sub); max-width:440px; margin:0 auto 14px; line-height:1.4;}
+
+  .speak-btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--teal); color:#fff; border:none;
+    border-radius:999px; padding:12px 20px; font-size:17px; font-weight:700; font-family:inherit;
+    cursor:pointer; margin-bottom:22px; min-height:48px;
+  }
+  .speak-btn:active{background:var(--teal-dark);}
+  .speak-btn:focus-visible{outline:none; box-shadow:var(--ring);}
+
+  .stars{display:flex; gap:10px; justify-content:center; margin:6px 0 22px;}
+  .star-btn{
+    background:none; border:none; cursor:pointer; padding:4px; font-size:52px; line-height:1;
+    min-width:60px; min-height:60px; color:var(--gold-dim); transition:transform .15s ease;
+  }
+  .star-btn.filled{color:var(--gold);}
+  .star-btn:active{transform:scale(1.15);}
+  .star-btn:focus-visible{outline:none; box-shadow:var(--ring); border-radius:12px;}
+  .rate-hint{font-size:16px; color:var(--sub); margin-bottom:4px; min-height:22px; font-weight:700;}
+
+  .nextbar{margin-top:auto; width:100%; display:flex; justify-content:center; padding-top:10px;}
+  .next-btn{
+    background:var(--coral); color:#fff; border:none; border-radius:18px; font-family:inherit;
+    font-size:20px; font-weight:700; padding:16px 30px; min-height:56px; cursor:pointer;
+    box-shadow:0 5px 0 var(--coral-dark); transition:transform .1s ease;
+    display:none; align-items:center; gap:10px;
+  }
+  .next-btn.show{display:inline-flex;}
+  .next-btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--coral-dark);}
+  .next-btn:focus-visible{outline:none; box-shadow:var(--ring);}
+
+  .celebrate{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none; font-size:80px; opacity:0; transform:scale(.6);
+  }
+  .celebrate.pop{animation:pop .8s ease forwards;}
+  @keyframes pop{
+    0%{opacity:0; transform:scale(.5) rotate(-8deg);}
+    30%{opacity:1; transform:scale(1.15) rotate(4deg);}
+    55%{transform:scale(1) rotate(0deg);}
+    100%{opacity:0; transform:scale(1) rotate(0deg);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .celebrate.pop{animation:none; opacity:0;}
+    .star-btn{transition:none;}
+  }
+
+  .confetti-piece{position:fixed; top:-20px; font-size:22px; pointer-events:none; animation:fall linear forwards;}
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:.9; } }
+
+  /* summary screen */
+  .summary{display:none; flex-direction:column; gap:16px;}
+  .summary.show{display:flex;}
+  .summary-card{background:var(--card); border-radius:28px; padding:28px 22px; box-shadow:0 10px 0 rgba(0,0,0,.06), 0 2px 14px rgba(0,0,0,.06);}
+  .summary-head{text-align:center; margin-bottom:10px;}
+  .summary-head .big{font-size:56px;}
+  .summary-head h2{font-size:26px; margin:4px 0 2px;}
+  .summary-head p{color:var(--sub); font-size:17px; margin:0;}
+  .metrics{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0 6px;}
+  .metric{background:var(--gold-dim); border-radius:16px; padding:10px 16px; text-align:center; min-width:100px;}
+  .metric .num{font-size:24px; font-weight:700; display:block;}
+  .metric .lab{font-size:13px; color:var(--sub); font-weight:700;}
+  .list{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+  .row{display:flex; align-items:center; gap:12px; background:var(--bg); border-radius:14px; padding:10px 12px;}
+  .row .re{font-size:30px;}
+  .row .rn{flex:1; font-weight:700; font-size:16px; text-align:left;}
+  .row .rs{font-size:16px; color:var(--gold); font-weight:700; white-space:nowrap;}
+
+  .actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  .btn{font-family:inherit; font-size:17px; font-weight:700; border:none; border-radius:16px; padding:14px 22px; min-height:52px; cursor:pointer;}
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 4px 0 var(--teal-dark);}
+  .btn-primary:active{transform:translateY(3px); box-shadow:0 1px 0 var(--teal-dark);}
+  .btn-ghost{background:var(--gold-dim); color:var(--ink); box-shadow:0 4px 0 rgba(0,0,0,.08);}
+  .btn-ghost:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.08);}
+  .btn:focus-visible{outline:none; box-shadow:var(--ring);}
+  .note{text-align:center; font-size:14px; color:var(--sub); margin-top:8px;}
+
+  .main-screen{display:flex; flex-direction:column; flex:1;}
+  .hidden{display:none !important;}
+
+  ::-webkit-scrollbar{width:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">⭐ Rate It!</div>
+    <div class="stats">
+      <div class="pill">📦 <span id="itemCount">1/20</span></div>
+      <div class="pill">⭐ <span id="scoreCount">0</span></div>
+    </div>
+  </header>
+
+  <div id="mainScreen" class="main-screen">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="card">
+      <div class="celebrate" id="celebrate">🎉</div>
+      <div class="emoji" id="itemEmoji">🎧</div>
+      <div class="name" id="itemName">Item name</div>
+      <div class="desc" id="itemDesc">Description</div>
+      <button class="speak-btn" id="speakBtn" aria-label="Read this out loud">🔊 Read it to me</button>
+
+      <div class="rate-hint" id="rateHint">Tap a star to give your rating</div>
+      <div class="stars" id="stars" role="group" aria-label="Star rating, 1 to 5"></div>
+
+      <div class="nextbar">
+        <button class="next-btn" id="nextBtn">Next item ➜</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="summaryScreen" class="summary">
+    <div class="summary-card">
+      <div class="summary-head">
+        <div class="big">🏆</div>
+        <h2>Great job!</h2>
+        <p>You rated all 20 products</p>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span class="num" id="mTotal">20</span><span class="lab">RATED</span></div>
+        <div class="metric"><span class="num" id="mAvg">0.0</span><span class="lab">AVG STARS</span></div>
+        <div class="metric"><span class="num" id="mTime">0:00</span><span class="lab">TIME TAKEN</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="pdfBtn">⬇️ Download my results (PDF)</button>
+        <button class="btn btn-ghost" id="restartBtn">🔁 Start again</button>
+      </div>
+      <p class="note">You can also take a screenshot of this page to keep your results.</p>
+    </div>
+    <div class="summary-card">
+      <div class="list" id="resultsList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const items = [
+  {e:"🎧", n:"Headphones", d:"Listen to music with no wires. Good for travel."},
+  {e:"👟", n:"Trainers", d:"Shoes for walking, running and sport."},
+  {e:"📱", n:"Phone Case", d:"Protects your phone if you drop it."},
+  {e:"⌚", n:"Smart Watch", d:"Tells the time and counts your steps."},
+  {e:"🎒", n:"Backpack", d:"Carries your things to college or work."},
+  {e:"🧴", n:"Shampoo", d:"Washes and cleans your hair."},
+  {e:"🍫", n:"Chocolate Bar", d:"A sweet treat to eat."},
+  {e:"☕", n:"Coffee Mug", d:"A cup for hot drinks like tea or coffee."},
+  {e:"📓", n:"Notebook", d:"Paper for writing and drawing."},
+  {e:"🕶️", n:"Sunglasses", d:"Protects your eyes from bright sun."},
+  {e:"🧦", n:"Socks", d:"Keep your feet warm and comfy."},
+  {e:"🎮", n:"Game Controller", d:"Used to play video games."},
+  {e:"💡", n:"Desk Lamp", d:"Gives light for reading at night."},
+  {e:"🕯️", n:"Candle", d:"Smells nice and makes a room cosy."},
+  {e:"🧢", n:"Baseball Cap", d:"A hat to wear outside."},
+  {e:"🎁", n:"Gift Wrap", d:"Paper for wrapping presents."},
+  {e:"🍿", n:"Popcorn", d:"A snack to eat while watching a film."},
+  {e:"🧺", n:"Laundry Basket", d:"Holds dirty clothes before washing."},
+  {e:"🔋", n:"Phone Charger", d:"Charges your phone battery."},
+  {e:"🧼", n:"Hand Soap", d:"Cleans your hands and stops germs."}
+];
+
+let idx = 0;
+let ratings = new Array(items.length).fill(0);
+let startTime = Date.now();
+
+const itemEmoji = document.getElementById('itemEmoji');
+const itemName = document.getElementById('itemName');
+const itemDesc = document.getElementById('itemDesc');
+const starsEl = document.getElementById('stars');
+const nextBtn = document.getElementById('nextBtn');
+const speakBtn = document.getElementById('speakBtn');
+const rateHint = document.getElementById('rateHint');
+const itemCount = document.getElementById('itemCount');
+const scoreCount = document.getElementById('scoreCount');
+const progressFill = document.getElementById('progressFill');
+const celebrate = document.getElementById('celebrate');
+const mainScreen = document.getElementById('mainScreen');
+const summaryScreen = document.getElementById('summaryScreen');
+
+function buildStars(){
+  starsEl.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const b = document.createElement('button');
+    b.className = 'star-btn';
+    b.textContent = '★';
+    b.setAttribute('aria-label', i + ' star' + (i>1?'s':''));
+    b.addEventListener('click', ()=>rate(i));
+    starsEl.appendChild(b);
+  }
+}
+
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9; u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function showItem(){
+  const it = items[idx];
+  itemEmoji.textContent = it.e;
+  itemName.textContent = it.n;
+  itemDesc.textContent = it.d;
+  itemCount.textContent = (idx+1) + '/' + items.length;
+  progressFill.style.width = (((idx)/items.length)*100 + 5) + '%';
+  nextBtn.classList.remove('show');
+  rateHint.textContent = 'Tap a star to give your rating';
+  [...starsEl.children].forEach(s=>s.classList.remove('filled'));
+  speak(it.n + '. ' + it.d);
+}
+
+function rate(n){
+  ratings[idx] = n;
+  [...starsEl.children].forEach((s,i)=> s.classList.toggle('filled', i < n));
+  const words = ['','Okay','Good','Nice pick!','Great choice!','Amazing!'];
+  rateHint.textContent = words[n] + ' You gave ' + n + ' star' + (n>1?'s':'') + '.';
+  scoreCount.textContent = ratings.filter(r=>r>0).length;
+  speak(n + ' stars. ' + words[n]);
+  burst();
+  nextBtn.classList.add('show');
+  nextBtn.focus();
+}
+
+function burst(){
+  celebrate.classList.remove('pop');
+  void celebrate.offsetWidth;
+  const icons = ['🎉','⭐','✨','🥳'];
+  celebrate.textContent = icons[Math.floor(Math.random()*icons.length)];
+  celebrate.classList.add('pop');
+  for(let i=0;i<10;i++){
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.textContent = icons[Math.floor(Math.random()*icons.length)];
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.animationDuration = (1.4 + Math.random()*1.2) + 's';
+    p.style.fontSize = (14 + Math.random()*16) + 'px';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 2800);
+  }
+}
+
+nextBtn.addEventListener('click', ()=>{
+  if(idx < items.length - 1){
+    idx++;
+    showItem();
+  } else {
+    finish();
+  }
+});
+
+speakBtn.addEventListener('click', ()=>{
+  const it = items[idx];
+  speak(it.n + '. ' + it.d);
+});
+
+function finish(){
+  mainScreen.classList.add('hidden');
+  summaryScreen.classList.add('show');
+  const total = ratings.filter(r=>r>0).length;
+  const sum = ratings.reduce((a,b)=>a+b,0);
+  const avg = total ? (sum/total).toFixed(1) : '0.0';
+  document.getElementById('mTotal').textContent = total;
+  document.getElementById('mAvg').textContent = avg;
+  const secs = Math.round((Date.now()-startTime)/1000);
+  document.getElementById('mTime').textContent = Math.floor(secs/60) + ':' + String(secs%60).padStart(2,'0');
+
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+  items.forEach((it,i)=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = '<span class="re">'+it.e+'</span><span class="rn">'+it.n+'</span><span class="rs">'+('★'.repeat(ratings[i]||0) || '—')+'</span>';
+    list.appendChild(row);
+  });
+  speak('Well done! You rated all twenty products. Your average rating was ' + avg + ' stars.');
+}
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  idx = 0;
+  ratings = new Array(items.length).fill(0);
+  startTime = Date.now();
+  scoreCount.textContent = '0';
+  summaryScreen.classList.remove('show');
+  mainScreen.classList.remove('hidden');
+  showItem();
+});
+
+document.getElementById('pdfBtn').addEventListener('click', ()=>{
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Rate It! - My Star Ratings', 14, 18);
+    doc.setFontSize(11);
+    const total = ratings.filter(r=>r>0).length;
+    const sum = ratings.reduce((a,b)=>a+b,0);
+    const avg = total ? (sum/total).toFixed(1) : '0.0';
+    doc.text('Items rated: ' + total + ' / ' + items.length, 14, 28);
+    doc.text('Average rating: ' + avg + ' stars', 14, 35);
+    let y = 48;
+    items.forEach((it,i)=>{
+      const line = it.n + ':  ' + (ratings[i] ? (ratings[i] + ' star' + (ratings[i]>1?'s':'')) : 'not rated');
+      doc.text(line, 14, y);
+      y += 8;
+      if(y > 280){ doc.addPage(); y = 20; }
+    });
+    doc.save('my-star-ratings.pdf');
+  }catch(e){
+    alert('Could not create the PDF. You can take a screenshot instead.');
+  }
+});
+
+buildStars();
+showItem();
+</script>
+</body>
+</html>

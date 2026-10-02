@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phoenix College Timer</title>
+  <style>
+    :root {
+      --sand: #f2c14e;
+      --bg1: #0b1220;
+      --bg2: #16223a;
+      --panel: rgba(255, 255, 255, 0.10);
+      --panel-border: rgba(255, 255, 255, 0.18);
+      --text: #f8fafc;
+      --muted: #b7c1d1;
+      --accent: #62d6ff;
+      --danger: #ff6b6b;
+      --success: #6ee7b7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-rounded, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(98, 214, 255, 0.18), transparent 32%),
+        radial-gradient(circle at 85% 12%, rgba(242, 193, 78, 0.14), transparent 28%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: min(1500px, 100%);
+      min-height: calc(100vh - 40px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 18px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 3vw, 2.75rem);
+      letter-spacing: -0.04em;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .status-pill {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--muted);
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .status-pill.running {
+      color: var(--success);
+      box-shadow: inset 0 0 22px rgba(110, 231, 183, 0.12);
+    }
+
+    .status-pill.paused {
+      color: #ffd166;
+    }
+
+    .main-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 350px;
+      gap: 16px;
+    }
+
+    .timer-stage,
+    .controls,
+    .next-box {
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      box-shadow: 0 20px 55px rgba(0,0,0,0.22);
+    }
+
+    .timer-stage {
+      min-height: 560px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      align-items: stretch;
+      gap: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .canvas-wrap {
+      min-width: 0;
+      min-height: 530px;
+      position: relative;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 65%);
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .digital-panel {
+      align-self: center;
+      min-height: 330px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(4, 10, 20, 0.46);
+      border: 1px solid rgba(255,255,255,0.12);
+      text-align: center;
+    }
+
+    .digital-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 800;
+    }
+
+    .digital-time {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      text-shadow: 0 0 28px rgba(98, 214, 255, 0.34);
+    }
+
+    .progress-track {
+      height: 11px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.09);
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--sand));
+      border-radius: inherit;
+      transition: width 0.15s linear;
+    }
+
+    .elapsed-text {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .controls {
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .controls h2 {
+      margin: 0 0 14px;
+      font-size: 1.2rem;
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-group > label,
+    .section-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .time-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .time-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .time-field span {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      color: var(--text);
+      background: rgba(2, 7, 16, 0.55);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    input[type="number"],
+    select {
+      height: 44px;
+      padding: 0 10px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 750;
+    }
+
+    select {
+      text-align: left;
+    }
+
+    select option {
+      background: #142039;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(98,214,255,0.12);
+    }
+
+    .colour-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="color"] {
+      width: 52px;
+      height: 44px;
+      padding: 3px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      background: rgba(2,7,16,0.55);
+      cursor: pointer;
+    }
+
+    .colour-value {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: rgba(2,7,16,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      color: var(--muted);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 13px;
+      color: #08101d;
+      font: inherit;
+      font-weight: 850;
+      cursor: pointer;
+      transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #76e4ff, #57bff4);
+      box-shadow: 0 10px 25px rgba(87,191,244,0.22);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.11);
+      border: 1px solid rgba(255,255,255,0.13);
+    }
+
+    .danger {
+      color: white;
+      background: linear-gradient(135deg, #ff7b7b, #ef5350);
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .preset-row button {
+      min-height: 38px;
+      color: var(--text);
+      font-size: 0.84rem;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.11);
+    }
+
+    .volume-row {
+      display: grid;
+      grid-template-columns: 1fr 46px;
+      gap: 9px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .volume-value {
+      color: var(--muted);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+    }
+
+    .next-box {
+      min-height: 170px;
+      padding: 18px;
+    }
+
+    .next-box label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.12rem;
+      font-weight: 850;
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+      padding: 14px;
+      font: inherit;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .finish-flash {
+      animation: finishFlash 0.75s ease-in-out 4;
+    }
+
+    @keyframes finishFlash {
+      50% {
+        box-shadow: 0 0 0 8px rgba(242,193,78,0.18), 0 0 70px rgba(242,193,78,0.55);
+      }
+    }
+
+    @media (max-width: 1050px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+
+      .controls h2,
+      .button-row {
+        grid-column: 1 / -1;
+      }
+
+      .control-group {
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        min-height: calc(100vh - 20px);
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .timer-stage {
+        min-height: 680px;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(440px, 1fr) auto;
+      }
+
+      .canvas-wrap {
+        min-height: 440px;
+      }
+
+      .digital-panel {
+        min-height: 150px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .controls h2,
+      .button-row {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <h1>Phoenix College Timer</h1>
+        <p>Large visual hourglass timer with adjustable sand, sound and precise timing.</p>
+      </div>
+      <div id="statusPill" class="status-pill">Ready</div>
+    </header>
+
+    <section class="main-grid">
+      <section id="timerStage" class="timer-stage">
+        <div class="canvas-wrap">
+          <canvas id="hourglassCanvas" aria-label="Animated sand hourglass"></canvas>
+        </div>
+
+        <aside class="digital-panel">
+          <div class="digital-label">Time remaining</div>
+          <div id="digitalTime" class="digital-time">05:00</div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <div id="elapsedText" class="elapsed-text">0% complete</div>
+        </aside>
+      </section>
+
+      <aside class="controls">
+        <h2>Timer controls</h2>
+
+        <div class="control-group">
+          <span class="section-label">Duration</span>
+          <div class="time-inputs">
+            <label class="time-field">
+              <input id="hoursInput" type="number" min="0" max="99" value="0" />
+              <span>Hours</span>
+            </label>
+            <label class="time-field">
+              <input id="minutesInput" type="number" min="0" max="59" value="5" />
+              <span>Minutes</span>
+            </label>
+            <label class="time-field">
+              <input id="secondsInput" type="number" min="0" max="59" value="0" />
+              <span>Seconds</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="section-label">Quick times</span>
+          <div class="preset-row">
+            <button data-seconds="60">1 min</button>
+            <button data-seconds="300">5 min</button>
+            <button data-seconds="600">10 min</button>
+            <button data-seconds="900">15 min</button>
+            <button data-seconds="1800">30 min</button>
+            <button data-seconds="3600">1 hour</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="sandColour">Sand colour</label>
+          <div class="colour-row">
+            <input id="sandColour" type="color" value="#f2c14e" />
+            <div id="colourValue" class="colour-value">#F2C14E</div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="alarmSelect">Alarm sound</label>
+          <select id="alarmSelect">
+            <option value="gentle">Gentle chime</option>
+            <option value="school">School bell</option>
+            <option value="digital">Digital beeps</option>
+            <option value="success">Success melody</option>
+            <option value="none">No sound</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="volumeRange">Alarm volume</label>
+          <div class="volume-row">
+            <input id="volumeRange" type="range" min="0" max="100" value="70" />
+            <div id="volumeValue" class="volume-value">70%</div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="startPauseBtn" class="primary">Start</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+          <button id="addMinuteBtn" class="secondary">+1 minute</button>
+          <button id="testAlarmBtn" class="secondary">Test alarm</button>
+          <button id="stopAlarmBtn" class="danger full">Stop alarm</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="next-box">
+      <label for="nextTask">What's next:</label>
+      <textarea id="nextTask" placeholder="Type the next activity, lesson or task here..."></textarea>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("hourglassCanvas");
+      const ctx = canvas.getContext("2d");
+      const digitalTime = document.getElementById("digitalTime");
+      const progressBar = document.getElementById("progressBar");
+      const elapsedText = document.getElementById("elapsedText");
+      const statusPill = document.getElementById("statusPill");
+      const timerStage = document.getElementById("timerStage");
+
+      const hoursInput = document.getElementById("hoursInput");
+      const minutesInput = document.getElementById("minutesInput");
+      const secondsInput = document.getElementById("secondsInput");
+      const sandColour = document.getElementById("sandColour");
+      const colourValue = document.getElementById("colourValue");
+      const alarmSelect = document.getElementById("alarmSelect");
+      const volumeRange = document.getElementById("volumeRange");
+      const volumeValue = document.getElementById("volumeValue");
+
+      const startPauseBtn = document.getElementById("startPauseBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const addMinuteBtn = document.getElementById("addMinuteBtn");
+      const testAlarmBtn = document.getElementById("testAlarmBtn");
+      const stopAlarmBtn = document.getElementById("stopAlarmBtn");
+
+      let totalMs = 5 * 60 * 1000;
+      let remainingMs = totalMs;
+      let running = false;
+      let finished = false;
+      let lastFrame = performance.now();
+      let audioContext = null;
+      let alarmNodes = [];
+      let alarmTimeouts = [];
+      let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      const particles = Array.from({ length: 115 }, () => ({
+        phase: Math.random(),
+        speed: 0.75 + Math.random() * 1.35,
+        drift: (Math.random() - 0.5) * 0.9,
+        size: 1.1 + Math.random() * 2.3
+      }));
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function hexToRgb(hex) {
+        const value = hex.replace("#", "");
+        return {
+          r: parseInt(value.slice(0, 2), 16),
+          g: parseInt(value.slice(2, 4), 16),
+          b: parseInt(value.slice(4, 6), 16)
+        };
+      }
+
+      function shade(hex, amount) {
+        const { r, g, b } = hexToRgb(hex);
+        return `rgb(${clamp(r + amount, 0, 255)}, ${clamp(g + amount, 0, 255)}, ${clamp(b + amount, 0, 255)})`;
+      }
+
+      function getInputSeconds() {
+        const hours = clamp(parseInt(hoursInput.value, 10) || 0, 0, 99);
+        const minutes = clamp(parseInt(minutesInput.value, 10) || 0, 0, 59);
+        const seconds = clamp(parseInt(secondsInput.value, 10) || 0, 0, 59);
+        return hours * 3600 + minutes * 60 + seconds;
+      }
+
+      function setInputsFromSeconds(seconds) {
+        seconds = Math.max(0, Math.round(seconds));
+        hoursInput.value = Math.floor(seconds / 3600);
+        minutesInput.value = Math.floor((seconds % 3600) / 60);
+        secondsInput.value = seconds % 60;
+      }
+
+      function applyInputs() {
+        if (running) return;
+        const seconds = Math.max(1, getInputSeconds());
+        totalMs = seconds * 1000;
+        remainingMs = totalMs;
+        finished = false;
+        updateDisplay();
+      }
+
+      function formatTime(ms) {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const mm = String(minutes).padStart(2, "0");
+        const ss = String(seconds).padStart(2, "0");
+        return hours > 0 ? `${String(hours).padStart(2, "0")}:${mm}:${ss}` : `${mm}:${ss}`;
+      }
+
+      function updateStatus(text, mode = "") {
+        statusPill.textContent = text;
+        statusPill.className = `status-pill ${mode}`.trim();
+      }
+
+      function updateDisplay() {
+        const progress = totalMs > 0 ? clamp(1 - remainingMs / totalMs, 0, 1) : 1;
+        digitalTime.textContent = formatTime(remainingMs);
+        progressBar.style.width = `${progress * 100}%`;
+        elapsedText.textContent = `${Math.round(progress * 100)}% complete`;
+        document.title = `${formatTime(remainingMs)} — Phoenix College Timer`;
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        dpr = Math.max(1, window.devicePixelRatio || 1);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function roundedRectPath(context, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.arcTo(x + w, y, x + w, y + h, radius);
+        context.arcTo(x + w, y + h, x, y + h, radius);
+        context.arcTo(x, y + h, x, y, radius);
+        context.arcTo(x, y, x + w, y, radius);
+        context.closePath();
+      }
+
+      function chamberPath(cx, topY, neckY, bottomY, maxHalf, neckHalf) {
+        const h = bottomY - topY;
+        ctx.beginPath();
+        ctx.moveTo(cx - maxHalf, topY);
+        ctx.bezierCurveTo(
+          cx - maxHalf * 0.98, topY + h * 0.20,
+          cx - neckHalf * 1.8, neckY - h * 0.12,
+          cx - neckHalf, neckY
+        );
+        ctx.bezierCurveTo(
+          cx - neckHalf * 1.35, neckY + h * 0.12,
+          cx - maxHalf * 0.95, bottomY - h * 0.18,
+          cx - maxHalf, bottomY
+        );
+        ctx.lineTo(cx + maxHalf, bottomY);
+        ctx.bezierCurveTo(
+          cx + maxHalf * 0.95, bottomY - h * 0.18,
+          cx + neckHalf * 1.35, neckY + h * 0.12,
+          cx + neckHalf, neckY
+        );
+        ctx.bezierCurveTo(
+          cx + neckHalf * 1.8, neckY - h * 0.12,
+          cx + maxHalf * 0.98, topY + h * 0.20,
+          cx + maxHalf, topY
+        );
+        ctx.closePath();
+      }
+
+      function drawSandPile(cx, baseY, width, height, colour, glow = false) {
+        if (height <= 0.5 || width <= 1) return;
+
+        const gradient = ctx.createLinearGradient(cx, baseY - height, cx, baseY);
+        gradient.addColorStop(0, shade(colour, 24));
+        gradient.addColorStop(0.55, colour);
+        gradient.addColorStop(1, shade(colour, -38));
+
+        ctx.save();
+        if (glow) {
+          ctx.shadowColor = colour;
+          ctx.shadowBlur = 14;
+        }
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(cx - width / 2, baseY);
+        ctx.quadraticCurveTo(cx - width * 0.27, baseY - height * 0.88, cx, baseY - height);
+        ctx.quadraticCurveTo(cx + width * 0.27, baseY - height * 0.88, cx + width / 2, baseY);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = shade(colour, 48);
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 3; i++) {
+          const yy = baseY - height * (i / 4);
+          const ratio = 1 - i / 4;
+          ctx.beginPath();
+          ctx.moveTo(cx - width * 0.35 * ratio, yy);
+          ctx.quadraticCurveTo(cx, yy - height * 0.055, cx + width * 0.35 * ratio, yy);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawHourglass(now) {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        const progress = totalMs > 0 ? clamp(1 - remainingMs / totalMs, 0, 1) : 1;
+        const pulse = 0.5 + Math.sin(now / 350) * 0.5;
+        const sand = sandColour.value;
+
+        const hgH = Math.min(h * 0.92, w * 1.22);
+        const hgW = Math.min(w * 0.68, hgH * 0.58);
+        const cx = w / 2;
+        const top = (h - hgH) / 2;
+        const bottom = top + hgH;
+        const frameH = hgH * 0.095;
+        const glassTop = top + frameH * 0.72;
+        const glassBottom = bottom - frameH * 0.72;
+        const neckY = (glassTop + glassBottom) / 2;
+        const maxHalf = hgW * 0.42;
+        const neckHalf = Math.max(6, hgW * 0.038);
+        const innerPad = Math.max(8, hgW * 0.032);
+        const chamberTop = glassTop + innerPad;
+        const chamberBottom = glassBottom - innerPad;
+        const upperH = neckY - chamberTop;
+        const lowerH = chamberBottom - neckY;
+
+        // Soft background aura
+        const aura = ctx.createRadialGradient(cx, h * 0.48, hgW * 0.05, cx, h * 0.48, hgW * 0.75);
+        aura.addColorStop(0, "rgba(255,255,255,0.075)");
+        aura.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = aura;
+        ctx.fillRect(cx - hgW, top, hgW * 2, hgH);
+
+        // Side posts
+        const postGradient = ctx.createLinearGradient(cx - hgW / 2, 0, cx + hgW / 2, 0);
+        postGradient.addColorStop(0, "#4a2f20");
+        postGradient.addColorStop(0.18, "#9b6a3f");
+        postGradient.addColorStop(0.5, "#d4a66c");
+        postGradient.addColorStop(0.82, "#8a5a36");
+        postGradient.addColorStop(1, "#3c271b");
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.55)";
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = postGradient;
+        const postW = hgW * 0.062;
+        const postX = hgW * 0.48;
+        roundedRectPath(ctx, cx - postX, top + frameH * 0.45, postW, hgH - frameH * 0.9, postW / 2);
+        ctx.fill();
+        roundedRectPath(ctx, cx + postX - postW, top + frameH * 0.45, postW, hgH - frameH * 0.9, postW / 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Glass body
+        ctx.save();
+        chamberPath(cx, glassTop, neckY, glassBottom, maxHalf, neckHalf);
+        const glassGradient = ctx.createLinearGradient(cx - maxHalf, 0, cx + maxHalf, 0);
+        glassGradient.addColorStop(0, "rgba(130,205,255,0.08)");
+        glassGradient.addColorStop(0.12, "rgba(255,255,255,0.35)");
+        glassGradient.addColorStop(0.28, "rgba(185,230,255,0.10)");
+        glassGradient.addColorStop(0.68, "rgba(255,255,255,0.04)");
+        glassGradient.addColorStop(0.88, "rgba(255,255,255,0.30)");
+        glassGradient.addColorStop(1, "rgba(130,205,255,0.08)");
+        ctx.fillStyle = glassGradient;
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(224,244,255,0.68)";
+        ctx.lineWidth = Math.max(2, hgW * 0.009);
+        ctx.stroke();
+
+        // Sand clipped inside glass
+        ctx.clip();
+
+        const innerMaxHalf = maxHalf - innerPad * 1.2;
+        const upperFraction = 1 - progress;
+        const lowerFraction = progress;
+
+        const upperLevelY = neckY - upperH * upperFraction;
+        if (upperFraction > 0.002) {
+          const levelRatio = upperFraction;
+          const halfAtLevel = neckHalf + (innerMaxHalf - neckHalf) * Math.pow(levelRatio, 0.72);
+          const grad = ctx.createLinearGradient(0, upperLevelY, 0, neckY);
+          grad.addColorStop(0, shade(sand, 20));
+          grad.addColorStop(1, shade(sand, -32));
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(cx - halfAtLevel, upperLevelY);
+          ctx.quadraticCurveTo(cx, upperLevelY + upperH * 0.026, cx + halfAtLevel, upperLevelY);
+          ctx.lineTo(cx + neckHalf, neckY);
+          ctx.lineTo(cx - neckHalf, neckY);
+          ctx.closePath();
+          ctx.fill();
+
+          // Upper-sand surface sparkle
+          ctx.strokeStyle = shade(sand, 52);
+          ctx.globalAlpha = 0.5;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(cx - halfAtLevel * 0.92, upperLevelY);
+          ctx.quadraticCurveTo(cx, upperLevelY + 4, cx + halfAtLevel * 0.92, upperLevelY);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        const lowerPileHeight = lowerH * Math.min(0.93, Math.pow(lowerFraction, 0.70));
+        const lowerWidth = Math.min(innerMaxHalf * 1.92, innerMaxHalf * 0.26 + innerMaxHalf * 1.7 * Math.pow(lowerFraction, 0.48));
+        drawSandPile(cx, chamberBottom, lowerWidth, lowerPileHeight, sand, running);
+
+        // Falling sand stream and particles
+        if (running && remainingMs > 0 && progress < 1) {
+          const pilePeakY = chamberBottom - lowerPileHeight;
+          const streamTop = neckY - 2;
+          const streamBottom = Math.max(neckY + 6, pilePeakY + 4);
+          const streamGradient = ctx.createLinearGradient(0, streamTop, 0, streamBottom);
+          streamGradient.addColorStop(0, shade(sand, 45));
+          streamGradient.addColorStop(0.55, sand);
+          streamGradient.addColorStop(1, shade(sand, -10));
+          ctx.strokeStyle = streamGradient;
+          ctx.lineWidth = Math.max(2.4, hgW * 0.012);
+          ctx.shadowColor = sand;
+          ctx.shadowBlur = 7 + pulse * 4;
+          ctx.beginPath();
+          ctx.moveTo(cx, streamTop);
+          ctx.lineTo(cx, streamBottom);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          particles.forEach((particle, i) => {
+            const travel = (particle.phase + now * 0.00055 * particle.speed) % 1;
+            const y = streamTop + (streamBottom - streamTop) * travel;
+            const spread = 1.2 + travel * 7;
+            const x = cx + Math.sin(i * 12.21 + now * 0.004) * spread * particle.drift;
+            ctx.globalAlpha = 0.35 + (1 - travel) * 0.55;
+            ctx.fillStyle = i % 3 === 0 ? shade(sand, 36) : sand;
+            ctx.beginPath();
+            ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.globalAlpha = 1;
+        }
+
+        // Glass highlights
+        ctx.strokeStyle = "rgba(255,255,255,0.24)";
+        ctx.lineWidth = Math.max(2, hgW * 0.008);
+        ctx.beginPath();
+        ctx.moveTo(cx - maxHalf * 0.72, glassTop + hgH * 0.045);
+        ctx.bezierCurveTo(
+          cx - maxHalf * 0.86, glassTop + hgH * 0.24,
+          cx - neckHalf * 2.2, neckY - hgH * 0.10,
+          cx - neckHalf * 1.45, neckY - hgH * 0.025
+        );
+        ctx.stroke();
+
+        ctx.restore();
+
+        // Frame caps
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.52)";
+        ctx.shadowBlur = 22;
+        const capGradient = ctx.createLinearGradient(0, top, 0, top + frameH);
+        capGradient.addColorStop(0, "#e0b77a");
+        capGradient.addColorStop(0.26, "#9c673c");
+        capGradient.addColorStop(0.7, "#6f452c");
+        capGradient.addColorStop(1, "#39241b");
+        ctx.fillStyle = capGradient;
+
+        roundedRectPath(ctx, cx - hgW / 2, top, hgW, frameH, frameH * 0.36);
+        ctx.fill();
+        roundedRectPath(ctx, cx - hgW / 2, bottom - frameH, hgW, frameH, frameH * 0.36);
+        ctx.fill();
+        ctx.restore();
+
+        // Metallic details
+        ctx.fillStyle = "rgba(255,226,169,0.42)";
+        const detailR = Math.max(3, hgW * 0.014);
+        [
+          [cx - hgW * 0.40, top + frameH * 0.5],
+          [cx + hgW * 0.40, top + frameH * 0.5],
+          [cx - hgW * 0.40, bottom - frameH * 0.5],
+          [cx + hgW * 0.40, bottom - frameH * 0.5]
+        ].forEach(([x, y]) => {
+          ctx.beginPath();
+          ctx.arc(x, y, detailR, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function initialiseAudio() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+      }
+
+      function clearAlarm() {
+        alarmTimeouts.forEach(clearTimeout);
+        alarmTimeouts = [];
+        alarmNodes.forEach(node => {
+          try { node.stop(); } catch (_) {}
+          try { node.disconnect(); } catch (_) {}
+        });
+        alarmNodes = [];
+      }
+
+      function tone(frequency, startOffset, duration, type = "sine", gain = 0.25) {
+        initialiseAudio();
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const amp = audioContext.createGain();
+        const volume = Number(volumeRange.value) / 100;
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now + startOffset);
+        amp.gain.setValueAtTime(0.0001, now + startOffset);
+        amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain * volume), now + startOffset + 0.025);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + duration);
+
+        osc.connect(amp);
+        amp.connect(audioContext.destination);
+        osc.start(now + startOffset);
+        osc.stop(now + startOffset + duration + 0.04);
+        alarmNodes.push(osc);
+      }
+
+      function playAlarm(preview = false) {
+        clearAlarm();
+        const type = alarmSelect.value;
+        if (type === "none") return;
+
+        if (type === "gentle") {
+          [523.25, 659.25, 783.99].forEach((f, i) => tone(f, i * 0.17, 0.55, "sine", 0.24));
+          if (!preview) {
+            [523.25, 659.25, 783.99].forEach((f, i) => tone(f, 1.25 + i * 0.17, 0.65, "sine", 0.24));
+          }
+        } else if (type === "school") {
+          for (let i = 0; i < (preview ? 3 : 8); i++) {
+            tone(i % 2 ? 930 : 760, i * 0.22, 0.19, "square", 0.19);
+          }
+        } else if (type === "digital") {
+          for (let i = 0; i < (preview ? 4 : 12); i++) {
+            tone(1000 + (i % 3) * 180, i * 0.13, 0.10, "square", 0.14);
+          }
+        } else if (type === "success") {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((f, i) => tone(f, i * 0.18, 0.36, "triangle", 0.24));
+          if (!preview) {
+            notes.forEach((f, i) => tone(f, 1.15 + i * 0.18, 0.42, "triangle", 0.24));
+          }
+        }
+      }
+
+      function finishTimer() {
+        running = false;
+        finished = true;
+        remainingMs = 0;
+        startPauseBtn.textContent = "Start again";
+        updateStatus("Finished");
+        timerStage.classList.remove("finish-flash");
+        void timerStage.offsetWidth;
+        timerStage.classList.add("finish-flash");
+        playAlarm(false);
+        updateDisplay();
+      }
+
+      function startPause() {
+        initialiseAudio();
+
+        if (finished) {
+          remainingMs = totalMs;
+          finished = false;
+        }
+
+        if (!running && remainingMs <= 0) {
+          applyInputs();
+        }
+
+        running = !running;
+        lastFrame = performance.now();
+
+        if (running) {
+          startPauseBtn.textContent = "Pause";
+          updateStatus("Running", "running");
+        } else {
+          startPauseBtn.textContent = "Resume";
+          updateStatus("Paused", "paused");
+        }
+      }
+
+      function resetTimer() {
+        clearAlarm();
+        running = false;
+        finished = false;
+        timerStage.classList.remove("finish-flash");
+        totalMs = Math.max(1000, getInputSeconds() * 1000);
+        remainingMs = totalMs;
+        startPauseBtn.textContent = "Start";
+        updateStatus("Ready");
+        updateDisplay();
+      }
+
+      function addMinute() {
+        clearAlarm();
+        remainingMs += 60000;
+        totalMs += 60000;
+        setInputsFromSeconds(totalMs / 1000);
+        finished = false;
+        if (!running) {
+          startPauseBtn.textContent = "Start";
+          updateStatus("Ready");
+        }
+        updateDisplay();
+      }
+
+      function animationLoop(now) {
+        const delta = Math.min(250, now - lastFrame);
+        lastFrame = now;
+
+        if (running) {
+          remainingMs -= delta;
+          if (remainingMs <= 0) {
+            finishTimer();
+          }
+          updateDisplay();
+        }
+
+        drawHourglass(now);
+        requestAnimationFrame(animationLoop);
+      }
+
+      [hoursInput, minutesInput, secondsInput].forEach(input => {
+        input.addEventListener("change", () => {
+          input.value = clamp(parseInt(input.value, 10) || 0, Number(input.min), Number(input.max));
+          applyInputs();
+        });
+        input.addEventListener("input", applyInputs);
+      });
+
+      document.querySelectorAll("[data-seconds]").forEach(button => {
+        button.addEventListener("click", () => {
+          if (running) return;
+          const seconds = Number(button.dataset.seconds);
+          setInputsFromSeconds(seconds);
+          applyInputs();
+        });
+      });
+
+      sandColour.addEventListener("input", () => {
+        const colour = sandColour.value.toUpperCase();
+        colourValue.textContent = colour;
+        document.documentElement.style.setProperty("--sand", sandColour.value);
+      });
+
+      volumeRange.addEventListener("input", () => {
+        volumeValue.textContent = `${volumeRange.value}%`;
+      });
+
+      startPauseBtn.addEventListener("click", startPause);
+      resetBtn.addEventListener("click", resetTimer);
+      addMinuteBtn.addEventListener("click", addMinute);
+      testAlarmBtn.addEventListener("click", () => playAlarm(true));
+      stopAlarmBtn.addEventListener("click", clearAlarm);
+
+      window.addEventListener("resize", resizeCanvas);
+      document.addEventListener("visibilitychange", () => {
+        lastFrame = performance.now();
+      });
+
+      resizeCanvas();
+      updateDisplay();
+      requestAnimationFrame(animationLoop);
+    })();
+  </script>
+</body>
+</html>

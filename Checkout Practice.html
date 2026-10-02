@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Payment Practice App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #f7fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .screen {
+      width: 100%;
+      max-width: 700px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* --- Start Screen --- */
+    .card {
+      background: #ffffff;
+      border: 6px solid #3182ce;
+      border-radius: 28px;
+      padding: 30px 20px;
+      text-align: center;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+
+    .big-btn {
+      background-color: #38a169;
+      color: #ffffff;
+      font-size: 32px;
+      font-weight: 900;
+      border: none;
+      border-radius: 24px;
+      padding: 22px 40px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .big-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* --- Practice Guide Box --- */
+    .practice-box {
+      background: #fefcbf;
+      border: 4px dashed #d69e2e;
+      border-radius: 20px;
+      padding: 16px;
+      width: 100%;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .practice-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #744210;
+      margin-bottom: 8px;
+    }
+
+    .practice-detail {
+      font-size: 20px;
+      font-weight: 700;
+      color: #975a16;
+      margin: 4px 0;
+    }
+
+    /* --- Payment Method Options --- */
+    .method-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .method-card {
+      background: #ffffff;
+      border: 5px solid #cbd5e0;
+      border-radius: 24px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .method-card.selected {
+      border-color: #3182ce;
+      background-color: #ebf8ff;
+    }
+
+    .method-symbol {
+      font-size: 60px;
+      line-height: 1;
+    }
+
+    .method-label {
+      font-size: 28px;
+      font-weight: 900;
+      color: #2d3748;
+    }
+
+    /* --- Form Elements --- */
+    .form-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-label {
+      font-size: 24px;
+      font-weight: 800;
+      color: #2d3748;
+    }
+
+    .big-input {
+      width: 100%;
+      font-size: 28px;
+      font-weight: 800;
+      padding: 16px;
+      border: 4px solid #cbd5e0;
+      border-radius: 18px;
+      background: #ffffff;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .big-input:focus {
+      border-color: #3182ce;
+      outline: none;
+    }
+
+    /* --- Summary Screen --- */
+    .summary-card {
+      background: #ffffff;
+      border: 6px dashed #3182ce;
+      border-radius: 28px;
+      padding: 28px 20px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .summary-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #2b6cb0;
+      margin: 10px 0;
+    }
+
+    .screenshot-banner {
+      background: #ebf8ff;
+      border: 3px solid #3182ce;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #2b6cb0;
+      margin: 16px 0;
+    }
+
+    .summary-row {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      font-size: 22px;
+      font-weight: 800;
+      text-align: left;
+      color: #2d3748;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="card">
+      <div style="font-size: 90px;">🛒 💳</div>
+      <h1 style="font-size: 36px; color: #2b6cb0; margin: 10px 0;">Checkout Practice</h1>
+      <p style="font-size: 22px; color: #4a5568;">Learn how to choose a payment method and enter details!</p>
+      <button class="big-btn" onclick="startPractice()">▶ START PRACTICE</button>
+    </div>
+  </div>
+
+  <!-- 2. PAYMENT METHOD SELECTION -->
+  <div class="screen" id="methodScreen">
+    <h2 style="font-size: 32px; color: #2b6cb0; margin: 10px 0;">1. Choose How to Pay</h2>
+
+    <div class="method-container">
+      <div class="method-card" id="m-card" onclick="selectMethod('card')">
+        <div class="method-symbol">💳</div>
+        <div class="method-label">Bank Card</div>
+      </div>
+
+      <div class="method-card" id="m-bank" onclick="selectMethod('bank')">
+        <div class="method-symbol">🏛️</div>
+        <div class="method-label">Bank Transfer</div>
+      </div>
+
+      <div class="method-card" id="m-cash" onclick="selectMethod('cash')">
+        <div class="method-symbol">💵</div>
+        <div class="method-label">Cash on Delivery</div>
+      </div>
+    </div>
+
+    <button class="big-btn" onclick="confirmMethod()">NEXT ▶</button>
+  </div>
+
+  <!-- 3. ENTER BANK DETAILS SCREEN -->
+  <div class="screen" id="detailsScreen">
+    <h2 style="font-size: 32px; color: #2b6cb0; margin: 10px 0;">2. Enter Details</h2>
+
+    <!-- Sample Data Box for Student Reference -->
+    <div class="practice-box">
+      <div class="practice-title">📌 Practice Information to Use:</div>
+      <div class="practice-detail">Card Number: <b>4000 1234 5678 9010</b></div>
+      <div class="practice-detail">Expiry Date: <b>12 / 28</b></div>
+      <div class="practice-detail">CVV: <b>123</b></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="cardNumber">💳 Card Number</label>
+      <input class="big-input" id="cardNumber" type="text" placeholder="4000 1234 5678 9010" />
+    </div>
+
+    <div style="display: flex; gap: 12px; width: 100%;">
+      <div class="form-group">
+        <label class="form-label" for="expDate">📅 Expiry</label>
+        <input class="big-input" id="expDate" type="text" placeholder="12 / 28" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cvv">🔒 CVV</label>
+        <input class="big-input" id="cvv" type="text" placeholder="123" />
+      </div>
+    </div>
+
+    <button class="big-btn" onclick="submitDetails()">PAY NOW 💳</button>
+  </div>
+
+  <!-- 4. SUMMARY SCREEN -->
+  <div class="screen" id="summaryScreen">
+    <div class="summary-card">
+      <div style="font-size: 80px;">🎉 💳 🎉</div>
+      <div class="summary-title">PAYMENT DONE!</div>
+      
+      <div class="screenshot-banner">📸 PLEASE TAKE A SCREENSHOT NOW</div>
+
+      <div class="summary-row" id="sumMethod">Method: -</div>
+      <div class="summary-row" id="sumCard">Card: -</div>
+      <div class="summary-row" id="sumStatus">Status: Successful</div>
+
+      <button class="big-btn" onclick="startPractice()">PRACTICE AGAIN</button>
+    </div>
+  </div>
+
+  <script>
+    let chosenMethod = '';
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 0.85;
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startPractice() {
+      chosenMethod = '';
+      document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('cardNumber').value = '';
+      document.getElementById('expDate').value = '';
+      document.getElementById('cvv').value = '';
+
+      showScreen('methodScreen');
+      speakText("Choose how you would like to pay: Bank Card, Bank Transfer, or Cash on Delivery.");
+    }
+
+    function selectMethod(method) {
+      chosenMethod = method;
+      document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+
+      if ('vibrate' in navigator) navigator.vibrate(80);
+
+      if (method === 'card') {
+        document.getElementById('m-card').classList.add('selected');
+        speakText("Selected Bank Card");
+      } else if (method === 'bank') {
+        document.getElementById('m-bank').classList.add('selected');
+        speakText("Selected Bank Transfer");
+      } else if (method === 'cash') {
+        document.getElementById('m-cash').classList.add('selected');
+        speakText("Selected Cash on Delivery");
+      }
+    }
+
+    function confirmMethod() {
+      if (!chosenMethod) {
+        speakText("Please tap a payment method first.");
+        return;
+      }
+
+      if (chosenMethod === 'card' || chosenMethod === 'bank') {
+        showScreen('detailsScreen');
+        speakText("Enter your bank details using the practice information box.");
+      } else {
+        // Cash on delivery bypasses card entry
+        finishPayment("Cash on Delivery", "N/A (Cash)");
+      }
+    }
+
+    function submitDetails() {
+      const cardVal = document.getElementById('cardNumber').value.trim();
+      const expVal = document.getElementById('expDate').value.trim();
+      const cvvVal = document.getElementById('cvv').value.trim();
+
+      if (!cardVal || !expVal || !cvvVal) {
+        speakText("Please type in the card details.");
+        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+        return;
+      }
+
+      const formattedCard = cardVal.length > 4 ? `**** **** **** ${cardVal.slice(-4)}` : cardVal;
+      const methodName = chosenMethod === 'card' ? 'Bank Card' : 'Bank Transfer';
+
+      finishPayment(methodName, formattedCard);
+    }
+
+    function finishPayment(methodName, cardDisplay) {
+      showScreen('summaryScreen');
+
+      document.getElementById('sumMethod').innerText = `Method: ${methodName}`;
+      document.getElementById('sumCard').innerText = `Account / Card: ${cardDisplay}`;
+
+      speakText("Awesome job! Payment successful. Please take a screenshot now!");
+    }
+  </script>
+</body>
+</html>

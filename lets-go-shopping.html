@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Let's Go Shopping!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2FBF6;
+    --panel:#FFFFFF;
+    --teal:#146B5D;
+    --teal-dark:#0E4F45;
+    --teal-soft:#DCF3EC;
+    --coral:#FF6B5B;
+    --yellow:#FFC145;
+    --plum:#2B2540;
+    --grey:#6B6577;
+    --shadow: 0 10px 24px rgba(20,107,93,0.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E1F1B;
+      --panel:#153029;
+      --teal:#4FD6BC;
+      --teal-dark:#8CEBD8;
+      --teal-soft:#1D4A40;
+      --coral:#FF8A7D;
+      --yellow:#FFD37A;
+      --plum:#F3F1F8;
+      --grey:#C9C4D6;
+      --shadow: 0 10px 24px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E1F1B; --panel:#153029; --teal:#4FD6BC; --teal-dark:#8CEBD8;
+    --teal-soft:#1D4A40; --coral:#FF8A7D; --yellow:#FFD37A; --plum:#F3F1F8;
+    --grey:#C9C4D6; --shadow: 0 10px 24px rgba(0,0,0,0.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Atkinson Hyperlegible', Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:var(--plum);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+  }
+  button{ font-family:inherit; cursor:pointer; }
+  .screen{
+    display:none;
+    min-height:100vh;
+    width:100%;
+    flex-direction:column;
+    align-items:center;
+    padding:20px 16px 140px;
+  }
+  .screen.active{ display:flex; }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px;
+    background:var(--panel);
+    box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  }
+  .topbtn{
+    border:none; border-radius:20px;
+    background:var(--teal-soft); color:var(--teal-dark);
+    font-size:1.6rem; padding:10px 16px;
+    display:flex; align-items:center; gap:8px;
+    font-weight:700;
+    min-height:56px;
+  }
+  .topbtn:active{ transform:scale(0.94); }
+  .bag-indicator{
+    display:flex; align-items:center; gap:10px;
+    background:var(--yellow); color:var(--plum);
+    border-radius:24px; padding:10px 18px; font-size:1.5rem; font-weight:700;
+    border:none; min-height:56px;
+  }
+  .top-spacer{ height:80px; width:100%; }
+
+  /* ---------- START SCREEN ---------- */
+  #screen-start{ justify-content:center; gap:22px; text-align:center; padding-top:20px;}
+  .hero-emoji{ font-size:6.5rem; line-height:1; animation:float 3.2s ease-in-out infinite; }
+  @keyframes float{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+  h1{ font-size:2.6rem; margin:0; color:var(--teal-dark); }
+  .subtitle{ font-size:1.35rem; color:var(--grey); max-width:520px; margin:0; }
+  .big-start-btn{
+    margin-top:10px;
+    border:none; border-radius:36px;
+    background:var(--coral); color:#fff;
+    font-size:2rem; font-weight:700;
+    padding:28px 56px;
+    box-shadow:var(--shadow);
+    animation:pulse 2.2s ease-in-out infinite;
+    display:flex; align-items:center; gap:16px;
+  }
+  .big-start-btn:active{ transform:scale(0.96); animation:none; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.045);} }
+  .mybag-link{
+    border:none; background:transparent; color:var(--teal-dark);
+    font-size:1.2rem; font-weight:700; text-decoration:underline;
+    padding:12px; margin-top:4px; min-height:44px;
+  }
+
+  /* ---------- CATEGORY GRID ---------- */
+  .grid-title{ font-size:1.8rem; color:var(--teal-dark); margin:6px 0 18px; text-align:center; }
+  .cat-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:20px;
+    width:100%; max-width:640px;
+  }
+  .cat-card{
+    border:none; border-radius:28px; padding:26px 10px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    box-shadow:var(--shadow); color:#fff; font-weight:700; font-size:1.35rem;
+    min-height:170px; justify-content:center;
+  }
+  .cat-card:active{ transform:scale(0.95); }
+  .cat-card .emoji{ font-size:3.4rem; }
+  .cat-1{ background:var(--teal); }
+  .cat-2{ background:#4A90D9; }
+  .cat-3{ background:var(--coral); }
+  .cat-4{ background:#B07CE0; }
+
+  /* ---------- ITEM GRID ---------- */
+  .item-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:18px;
+    width:100%; max-width:640px;
+  }
+  @media(min-width:520px){ .item-grid{ grid-template-columns:repeat(3,1fr);} }
+  .item-card{
+    background:var(--panel); border:4px solid var(--teal-soft); border-radius:26px;
+    padding:20px 8px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    box-shadow:var(--shadow); position:relative; overflow:hidden;
+    min-height:150px; justify-content:center;
+  }
+  .item-card .emoji{ font-size:3.2rem; transition:transform .25s; }
+  .item-card .label{ font-size:1.15rem; font-weight:700; color:var(--plum); }
+  .item-card:active .emoji{ transform:scale(1.25) rotate(-6deg); }
+  .item-card.picked{ border-color:var(--coral); }
+  .burst{
+    position:absolute; inset:0; border-radius:26px; pointer-events:none;
+    background:radial-gradient(circle, var(--yellow) 0%, transparent 70%);
+    opacity:0; transform:scale(0.3);
+  }
+  .burst.go{ animation:burst .6s ease-out forwards; }
+  @keyframes burst{ 0%{opacity:.9; transform:scale(0.3);} 100%{opacity:0; transform:scale(1.6);} }
+
+  /* ---------- TOAST ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:150px; transform:translateX(-50%) translateY(20px);
+    background:var(--teal-dark); color:#fff; font-size:1.4rem; font-weight:700;
+    padding:16px 28px; border-radius:30px; box-shadow:var(--shadow);
+    opacity:0; transition:opacity .25s, transform .25s; z-index:40; pointer-events:none;
+    display:flex; align-items:center; gap:10px; max-width:88vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- BOTTOM BASKET BAR ---------- */
+  .basketbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    background:var(--panel); box-shadow:0 -6px 18px rgba(0,0,0,0.1);
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    display:flex; align-items:center; gap:12px;
+  }
+  .basketbar .slots{ display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+  .slot{
+    width:38px; height:38px; border-radius:10px; background:var(--teal-soft);
+    display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+  }
+  .slot.filled{ background:var(--yellow); }
+  .backbtn{
+    border:none; border-radius:20px; background:var(--teal-soft); color:var(--teal-dark);
+    font-size:1.4rem; font-weight:700; padding:14px 20px; min-height:56px;
+  }
+
+  /* ---------- CELEBRATION OVERLAY ---------- */
+  #screen-celebrate{
+    position:fixed; inset:0; z-index:60; background:var(--teal-dark);
+    justify-content:center; align-items:center; text-align:center; gap:18px;
+    padding:24px;
+  }
+  #screen-celebrate .emoji{ font-size:5.5rem; }
+  #screen-celebrate h2{ color:#fff; font-size:2.4rem; margin:0; }
+  #screen-celebrate p{ color:#fff; font-size:1.3rem; opacity:.9; margin:0; }
+  .confetti-piece{
+    position:absolute; top:-20px; width:14px; height:14px; border-radius:3px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:.9; } }
+  .celebrate-actions{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+  .celebrate-actions button{
+    border:none; border-radius:30px; padding:18px 30px; font-size:1.3rem; font-weight:700;
+    box-shadow:var(--shadow);
+  }
+  .btn-continue{ background:var(--yellow); color:var(--plum); }
+  .btn-mybag{ background:#fff; color:var(--teal-dark); }
+
+  /* ---------- SUMMARY SCREEN ---------- */
+  #screen-summary{ padding-top:100px; }
+  .summary-list{
+    width:100%; max-width:560px; background:var(--panel); border-radius:24px;
+    padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;
+  }
+  .summary-item{
+    display:flex; align-items:center; gap:14px; font-size:1.25rem; font-weight:700;
+    background:var(--teal-soft); border-radius:16px; padding:12px 16px;
+  }
+  .summary-item .emoji{ font-size:2rem; }
+  .summary-empty{ text-align:center; color:var(--grey); font-size:1.2rem; padding:30px 10px; }
+  .summary-actions{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+  .summary-actions button{
+    border:none; border-radius:26px; padding:16px 26px; font-size:1.2rem; font-weight:700;
+    box-shadow:var(--shadow);
+  }
+  .btn-print{ background:var(--teal); color:#fff; }
+  .btn-clear{ background:#fff; color:var(--coral); border:3px solid var(--coral) !important; }
+  .screenshot-hint{
+    margin-top:16px; font-size:1.05rem; color:var(--grey); text-align:center; max-width:480px;
+  }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #screen-summary, #screen-summary *{ visibility:visible; }
+    #screen-summary{ position:absolute; top:0; left:0; padding-top:20px; }
+    .summary-actions, .topbar, .basketbar{ display:none !important; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR (shown on all screens except start) ============ -->
+<div class="topbar" id="topbar" style="display:none;">
+  <button class="topbtn" id="homeBtn" aria-label="Home">🏠</button>
+  <button class="bag-indicator" id="bagIndicator" aria-label="My bag">🛍️ <span id="bagCount">0</span>/6</button>
+  <button class="topbtn" id="soundBtn" aria-label="Sound on or off">🔊</button>
+</div>
+
+<!-- ============ START SCREEN ============ -->
+<div class="screen active" id="screen-start">
+  <div class="hero-emoji">🛍️</div>
+  <h1>Let's Go Shopping!</h1>
+  <p class="subtitle">Tap the things you can buy in the shops.</p>
+  <button class="big-start-btn" id="startBtn">▶️ Start</button>
+  <button class="mybag-link" id="mybagStartBtn">See my bag</button>
+</div>
+
+<!-- ============ CATEGORY SCREEN ============ -->
+<div class="screen" id="screen-categories">
+  <div class="top-spacer"></div>
+  <div class="grid-title">Where shall we look?</div>
+  <div class="cat-grid" id="catGrid"></div>
+</div>
+
+<!-- ============ ITEM SCREEN ============ -->
+<div class="screen" id="screen-items">
+  <div class="top-spacer"></div>
+  <div class="grid-title" id="itemsTitle">Shop</div>
+  <div class="item-grid" id="itemGrid"></div>
+</div>
+
+<!-- ============ SUMMARY / MY BAG SCREEN ============ -->
+<div class="screen" id="screen-summary">
+  <div class="grid-title">🛍️ My Bag</div>
+  <div class="summary-list" id="summaryList"></div>
+  <p class="screenshot-hint">📸 You can take a screenshot of this page to keep your bag!</p>
+  <div class="summary-actions">
+    <button class="btn-print" id="printBtn">🖨️ Print / Save as PDF</button>
+    <button class="btn-clear" id="clearBtn">🔄 Empty my bag</button>
+  </div>
+</div>
+
+<!-- ============ BOTTOM BASKET BAR ============ -->
+<div class="basketbar" id="basketbar" style="display:none;">
+  <button class="backbtn" id="backBtn">⬅️ Back</button>
+  <div class="slots" id="slots"></div>
+</div>
+
+<!-- ============ CELEBRATION OVERLAY ============ -->
+<div id="screen-celebrate">
+  <div class="emoji">🎉</div>
+  <h2>Well done!</h2>
+  <p>You filled your bag with 6 things!</p>
+  <div class="celebrate-actions">
+    <button class="btn-continue" id="continueBtn">🛍️ Keep shopping</button>
+    <button class="btn-mybag" id="viewBagBtn">👜 See my bag</button>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- DATA ---------------- */
+  var CATEGORIES = [
+    { id:"food", label:"Food", emoji:"🍎", cls:"cat-1",
+      items:[
+        {name:"Apple", emoji:"🍎"}, {name:"Bread", emoji:"🍞"},
+        {name:"Banana", emoji:"🍌"}, {name:"Cheese", emoji:"🧀"},
+        {name:"Beans", emoji:"🥫"}, {name:"Biscuits", emoji:"🍪"}
+      ]},
+    { id:"drinks", label:"Drinks", emoji:"🧃", cls:"cat-2",
+      items:[
+        {name:"Milk", emoji:"🥛"}, {name:"Juice", emoji:"🧃"},
+        {name:"Tea", emoji:"☕"}, {name:"Water", emoji:"💧"},
+        {name:"Cola", emoji:"🥤"}
+      ]},
+    { id:"toiletries", label:"Toiletries", emoji:"🧼", cls:"cat-3",
+      items:[
+        {name:"Soap", emoji:"🧼"}, {name:"Toothbrush", emoji:"🪥"},
+        {name:"Shampoo", emoji:"🧴"}, {name:"Toilet roll", emoji:"🧻"},
+        {name:"Hairbrush", emoji:"🪮"}
+      ]},
+    { id:"extras", label:"Extras", emoji:"🔑", cls:"cat-4",
+      items:[
+        {name:"Newspaper", emoji:"📰"}, {name:"Umbrella", emoji:"☂️"},
+        {name:"Socks", emoji:"🧦"}, {name:"Keys", emoji:"🔑"},
+        {name:"Bag", emoji:"🛍️"}, {name:"Purse", emoji:"👛"}
+      ]}
+  ];
+  var BASKET_TARGET = 6;
+
+  /* ---------------- STATE ---------------- */
+  var basket = [];       // current bag towards celebration (max 6)
+  var allCollected = []; // full session log shown in "My Bag"
+  var soundOn = true;
+  try {
+    var savedSound = localStorage.getItem("shopSoundOn");
+    if (savedSound !== null) soundOn = savedSound === "1";
+  } catch(e) {}
+
+  /* ---------------- ELEMENTS ---------------- */
+  var screens = {
+    start: document.getElementById("screen-start"),
+    categories: document.getElementById("screen-categories"),
+    items: document.getElementById("screen-items"),
+    summary: document.getElementById("screen-summary")
+  };
+  var topbar = document.getElementById("topbar");
+  var basketbar = document.getElementById("basketbar");
+  var toastEl = document.getElementById("toast");
+  var celebrateEl = document.getElementById("screen-celebrate");
+  var soundBtn = document.getElementById("soundBtn");
+
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle("active", k === name);
+    });
+    var chrome = name !== "start";
+    topbar.style.display = chrome ? "flex" : "none";
+    basketbar.style.display = (name === "items") ? "flex" : "none";
+    window.scrollTo(0,0);
+  }
+
+  /* ---------------- AUDIO / SPEECH ---------------- */
+  var audioCtx = null;
+  function beep(freq){
+    if(!soundOn) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      g.gain.value = 0.001;
+      o.connect(g); g.connect(audioCtx.destination);
+      var now = audioCtx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      o.start(now); o.stop(now + 0.4);
+    }catch(e){}
+  }
+  function speak(text){
+    if(!soundOn) return;
+    try{
+      if("speechSynthesis" in window){
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.85; u.pitch = 1.05;
+        window.speechSynthesis.speak(u);
+      }
+    }catch(e){}
+  }
+  soundBtn.addEventListener("click", function(){
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? "🔊" : "🔇";
+    try{ localStorage.setItem("shopSoundOn", soundOn ? "1":"0"); }catch(e){}
+    if(soundOn) speak("Sound on");
+  });
+  soundBtn.textContent = soundOn ? "🔊" : "🔇";
+
+  /* ---------------- TOAST ---------------- */
+  var toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1400);
+  }
+
+  /* ---------------- BUILD CATEGORY GRID ---------------- */
+  var catGrid = document.getElementById("catGrid");
+  CATEGORIES.forEach(function(cat){
+    var btn = document.createElement("button");
+    btn.className = "cat-card " + cat.cls;
+    btn.innerHTML = '<span class="emoji">'+cat.emoji+'</span><span>'+cat.label+'</span>';
+    btn.addEventListener("click", function(){ openCategory(cat); });
+    catGrid.appendChild(btn);
+  });
+
+  /* ---------------- ITEM SCREEN ---------------- */
+  var itemGrid = document.getElementById("itemGrid");
+  var itemsTitle = document.getElementById("itemsTitle");
+  function openCategory(cat){
+    itemsTitle.textContent = cat.emoji + " " + cat.label;
+    itemGrid.innerHTML = "";
+    cat.items.forEach(function(item){
+      var card = document.createElement("button");
+      card.className = "item-card";
+      card.innerHTML = '<div class="burst"></div><span class="emoji">'+item.emoji+'</span><span class="label">'+item.name+'</span>';
+      card.addEventListener("click", function(){ pickItem(item, card); });
+      itemGrid.appendChild(card);
+    });
+    showScreen("items");
+    speak(cat.label);
+  }
+
+  function pickItem(item, card){
+    card.classList.add("picked");
+    var burst = card.querySelector(".burst");
+    burst.classList.remove("go"); void burst.offsetWidth; burst.classList.add("go");
+    beep(520 + Math.random()*120);
+    speak(item.name);
+    showToast("👍 " + item.name + "!");
+    basket.push(item);
+    allCollected.push(item);
+    renderSlots();
+    if(basket.length >= BASKET_TARGET){
+      setTimeout(celebrate, 500);
+    }
+    setTimeout(function(){ card.classList.remove("picked"); }, 500);
+  }
+
+  /* ---------------- BASKET SLOTS ---------------- */
+  var slotsEl = document.getElementById("slots");
+  var bagCountEl = document.getElementById("bagCount");
+  function renderSlots(){
+    slotsEl.innerHTML = "";
+    for(var i=0;i<BASKET_TARGET;i++){
+      var s = document.createElement("div");
+      s.className = "slot" + (i < basket.length ? " filled" : "");
+      s.textContent = i < basket.length ? basket[i].emoji : "";
+      slotsEl.appendChild(s);
+    }
+    bagCountEl.textContent = Math.min(basket.length, BASKET_TARGET);
+  }
+
+  /* ---------------- CELEBRATION ---------------- */
+  function celebrate(){
+    celebrateEl.style.display = "flex";
+    spawnConfetti();
+    beep(660); setTimeout(function(){beep(880);},150); setTimeout(function(){beep(1040);},300);
+    speak("Well done! You filled your bag!");
+  }
+  function spawnConfetti(){
+    var colors = ["#FF6B5B","#FFC145","#4FD6BC","#4A90D9","#B07CE0","#FFFFFF"];
+    for(var i=0;i<40;i++){
+      (function(){
+        var p = document.createElement("div");
+        p.className = "confetti-piece";
+        p.style.left = (Math.random()*100) + "vw";
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.animationDuration = (2 + Math.random()*1.6) + "s";
+        p.style.animationDelay = (Math.random()*0.6) + "s";
+        celebrateEl.appendChild(p);
+        setTimeout(function(){ p.remove(); }, 4000);
+      })();
+    }
+  }
+  document.getElementById("continueBtn").addEventListener("click", function(){
+    celebrateEl.style.display = "none";
+    basket = [];
+    renderSlots();
+    showScreen("categories");
+  });
+  document.getElementById("viewBagBtn").addEventListener("click", function(){
+    celebrateEl.style.display = "none";
+    basket = [];
+    renderSlots();
+    openSummary();
+  });
+
+  /* ---------------- SUMMARY / MY BAG ---------------- */
+  var summaryList = document.getElementById("summaryList");
+  function openSummary(){
+    summaryList.innerHTML = "";
+    if(allCollected.length === 0){
+      summaryList.innerHTML = '<div class="summary-empty">Your bag is empty. Go and pick some things! 🛒</div>';
+    } else {
+      allCollected.forEach(function(item){
+        var row = document.createElement("div");
+        row.className = "summary-item";
+        row.innerHTML = '<span class="emoji">'+item.emoji+'</span><span>'+item.name+'</span>';
+        summaryList.appendChild(row);
+      });
+    }
+    showScreen("summary");
+    speak("Here is your bag, with " + allCollected.length + " things.");
+  }
+  document.getElementById("bagIndicator").addEventListener("click", openSummary);
+  document.getElementById("mybagStartBtn").addEventListener("click", openSummary);
+  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    allCollected = [];
+    openSummary();
+    showToast("Bag emptied");
+  });
+
+  /* ---------------- NAV ---------------- */
+  document.getElementById("startBtn").addEventListener("click", function(){
+    showScreen("categories");
+  });
+  document.getElementById("homeBtn").addEventListener("click", function(){
+    showScreen("start");
+  });
+  document.getElementById("backBtn").addEventListener("click", function(){
+    showScreen("categories");
+  });
+
+  renderSlots();
+})();
+</script>
+</body>
+</html>
